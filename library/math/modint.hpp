@@ -2,15 +2,19 @@
 #define MAOMAO90_MODINT
 #include <type_traits>
 #include <concepts>
+#include <limits>
 #include <iostream>
 #include <cassert>
 namespace maomao90 {
-    template <int mod = 998244353, enable_if_t<(mod >= 1), int> = 0>
+    template <signed_integral M = int, M mod = 998244353, enable_if_t<(mod >= 1), int> = 0>
     struct static_modint {
-        static constexpr int imod() {
+        using UM = make_unsigned_t<M>;
+        using BM = conditional_t<numeric_limits<M>::max() <= numeric_limits<int>::max(),
+              long long, __int128>;
+        static constexpr M imod() {
             return mod;
         }
-        static constexpr unsigned int umod() {
+        static constexpr UM umod() {
             return mod;
         }
 
@@ -24,7 +28,7 @@ namespace maomao90 {
 
         template <signed_integral T>
         constexpr static_modint(T v) {
-            int x = v % imod();
+            M x = v % imod();
             if (x < 0) {
                 x += imod();
             }
@@ -34,7 +38,7 @@ namespace maomao90 {
         template <unsigned_integral T>
         constexpr static_modint(T v): _v(v % umod()) {}
 
-        constexpr unsigned int val() const {
+        constexpr UM val() const {
             return _v;
         }
 
@@ -78,7 +82,7 @@ namespace maomao90 {
             return *this;
         }
         constexpr static_modint& operator*=(const static_modint &o) {
-            _v = (unsigned long long) _v * o._v % umod();
+            _v = (BM) _v * o._v % umod();
             return *this;
         }
         constexpr static_modint& operator/=(const static_modint &o) {
@@ -127,7 +131,7 @@ namespace maomao90 {
         }
 
         friend constexpr istream& operator>>(istream &is, static_modint &o) {
-            int v; is >> v;
+            M v; is >> v;
             o = static_modint(v);
             return is;
         }
@@ -135,7 +139,7 @@ namespace maomao90 {
             return os << o._v;
         }
     private:
-        unsigned int _v;
+        UM _v;
     };
 }
 #endif
