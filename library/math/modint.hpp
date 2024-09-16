@@ -20,7 +20,7 @@ namespace maomao90 {
 
         static_modint(): _v(0) {}
 
-        static constexpr static_modint raw(int v) {
+        static constexpr static_modint raw(M v) {
             static_modint res;
             res._v = v;
             return res;
