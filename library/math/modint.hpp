@@ -42,6 +42,13 @@ namespace maomao90 {
             return _v;
         }
 
+        constexpr static_modint operator+() const {
+            return *this;
+        }
+        constexpr static_modint operator-() const {
+            return raw(_v == 0 ? 0 : imod() - _v);
+        }
+
         constexpr static_modint& operator++() {
             _v++;
             if (_v == umod()) {
