@@ -6,6 +6,88 @@
 #include <iostream>
 #include <cassert>
 namespace maomao90 {
+    namespace internal::modint {
+        constexpr long long pow_mod(long long b, long long p, int mod) {
+            long long res = 1;
+            while (p) {
+                if (p & 1) {
+                    res = res * b % mod;
+                }
+                b = b * b % mod;
+                p >>= 1;
+            }
+            return res;
+        }
+        constexpr __int128 pow_mod(__int128 b, __int128 p, long long mod) {
+            __int128 res = 1;
+            while (p) {
+                if (p & 1) {
+                    res = res * b % mod;
+                }
+                b = b * b % mod;
+                p >>= 1;
+            }
+            return res;
+        }
+        constexpr bool is_prime(int n) {
+            if (n <= 1) return false;
+            if (n % 2 == 0) return false;
+            constexpr long long bases[3] = {2, 7, 61};
+            for (long long a : bases) {
+                if (n == a) {
+                    return true;
+                }
+            }
+            long long d = n - 1;
+            while (d % 2 == 0) d /= 2;
+            for (long long a : bases) {
+                long long t = d, y = pow_mod(a, t, n);
+                while (t != n - 1 && y != 1 && y != n - 1) {
+                    y = y * y % n;
+                    t <<= 1;
+                }
+                if (y != n - 1 && t % 2 == 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        constexpr bool is_prime(long long n) {
+            if (n <= 1) return false;
+            if (n % 2 == 0) return false;
+            constexpr __int128 bases[12] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
+            for (__int128 a : bases) {
+                if (n == a) {
+                    return true;
+                }
+            }
+            __int128 d = n - 1;
+            while (d % 2 == 0) d /= 2;
+            for (__int128 a : bases) {
+                __int128 t = d, y = pow_mod(a, t, n);
+                while (t != n - 1 && y != 1 && y != n - 1) {
+                    y = y * y % n;
+                    t <<= 1;
+                }
+                if (y != n - 1 && t % 2 == 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        template <typename T>
+        constexpr T inv_gcd(T x, T mod) {
+            T a = mod, b = x, va = 0, vb = 1;
+            while (b) {
+                T k = a / b;
+                a -= k * b; va -= k * vb;
+                swap(a, b);
+                swap(va, vb);
+            }
+            assert(a == 1); // gcd should be equals to 1
+            return (va % mod + mod) % mod;
+        }
+    }
     template <signed_integral M = int, M mod = 998244353, enable_if_t<(mod >= 1), int> = 0>
     struct static_modint {
         using UM = make_unsigned_t<M>;
@@ -109,8 +191,11 @@ namespace maomao90 {
             return res;
         }
         constexpr static_modint inv() const {
-            assert(_v > 0);
-            return pow(umod() - 2);
+            if constexpr (is_prime_mod) {
+                return pow(imod() - 2);
+            } else {
+                return raw(internal::modint::inv_gcd<BM>(_v, imod()));
+            }
         }
 
         friend constexpr static_modint operator+(const static_modint &l, const static_modint &r) {
@@ -147,6 +232,7 @@ namespace maomao90 {
         }
     private:
         UM _v;
+        static constexpr bool is_prime_mod = internal::modint::is_prime(imod());
     };
 }
 #endif
