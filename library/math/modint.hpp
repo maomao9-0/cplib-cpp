@@ -30,14 +30,16 @@ namespace maomao90 {
             return res;
         }
         constexpr bool is_prime(int n) {
-            if (n <= 1) return false;
-            if (n % 2 == 0) return false;
-            constexpr long long bases[3] = {2, 7, 61};
-            for (long long a : bases) {
-                if (n == a) {
-                    return true;
-                }
+            if (n <= 1) {
+                return false;
             }
+            if (n == 2) {
+                return true;
+            }
+            if (n % 2 == 0) {
+                return false;
+            }
+            constexpr long long bases[3] = {2, 7, 61};
             long long d = n - 1;
             while (d % 2 == 0) d /= 2;
             for (long long a : bases) {
@@ -53,14 +55,16 @@ namespace maomao90 {
             return true;
         }
         constexpr bool is_prime(long long n) {
-            if (n <= 1) return false;
-            if (n % 2 == 0) return false;
-            constexpr __int128 bases[12] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
-            for (__int128 a : bases) {
-                if (n == a) {
-                    return true;
-                }
+            if (n <= 1) {
+                return false;
             }
+            if (n == 2) {
+                return true;
+            }
+            if (n % 2 == 0) {
+                return false;
+            }
+            constexpr __int128 bases[7] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
             __int128 d = n - 1;
             while (d % 2 == 0) d /= 2;
             for (__int128 a : bases) {
@@ -132,7 +136,7 @@ namespace maomao90 {
         }
 
         constexpr static_modint& operator++() {
-            _v++;
+            ++_v;
             if (_v == umod()) {
                 _v = 0;
             }
@@ -142,7 +146,7 @@ namespace maomao90 {
             if (_v == 0) {
                 _v = umod();
             }
-            _v--;
+            --_v;
             return *this;
         }
         constexpr static_modint operator++(int) {
