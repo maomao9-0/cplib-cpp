@@ -23,6 +23,9 @@ namespace maomao90 {
         while (d % 2 == 0) d /= 2;
         for (int i = 0; i < size; i++) {
             T a = bases[i];
+            if (a % n == 0) {
+                continue;
+            }
             T t = d, y = pow_mod<T>(a, t, n);
             while (t != n - 1 && y != 1 && y != n - 1) {
                 y = (U) y * y % n;
