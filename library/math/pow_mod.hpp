@@ -9,6 +9,10 @@ namespace maomao90 {
         using U = conditional_t<numeric_limits<T>::max() <= numeric_limits<unsigned int>::max(),
               unsigned long long, unsigned __int128>;
         T res = 1;
+        b %= mod;
+        if (b < 0) {
+            b += mod;
+        }
         while (p) {
             if (p & 1) {
                 res = (U) res * b % mod;

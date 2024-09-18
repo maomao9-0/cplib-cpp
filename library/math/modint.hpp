@@ -1,6 +1,5 @@
 #pragma once
 #include "library/math/extended_gcd.hpp"
-#include "library/math/pow_mod.hpp"
 #include "library/math/primality_test.hpp"
 
 #include <type_traits>
