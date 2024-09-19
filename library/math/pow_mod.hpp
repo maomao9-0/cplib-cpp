@@ -7,8 +7,7 @@
 namespace maomao90 {
     template <integral T>
     constexpr T pow_mod(T b, T p, T mod) {
-        using U = conditional_t<numeric_limits<T>::max() <= numeric_limits<unsigned int>::max(),
-              unsigned long long, unsigned __int128>;
+        using U = conditional_t<numeric_limits<T>::max() <= numeric_limits<unsigned int>::max(), unsigned long long, unsigned __int128>;
         T res = 1;
         b %= mod;
         if (b < 0) {
