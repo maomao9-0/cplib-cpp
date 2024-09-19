@@ -1,4 +1,5 @@
 #pragma once
+
 #include "library/math/extended_gcd.hpp"
 #include "library/math/primality_test.hpp"
 
@@ -7,6 +8,7 @@
 #include <limits>
 #include <iostream>
 #include <cassert>
+
 namespace maomao90 {
     template <signed_integral M = int, M mod = 998244353, enable_if_t<(mod >= 1), int> = 0>
     struct static_modint {

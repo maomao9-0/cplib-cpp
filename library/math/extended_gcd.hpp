@@ -1,4 +1,5 @@
 #pragma once
+
 namespace maomao90 {
     template <typename T>
     constexpr T inv_gcd(T x, T mod) {

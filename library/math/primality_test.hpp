@@ -1,4 +1,5 @@
 #pragma once
+
 #include "library/math/pow_mod.hpp"
 
 #include <concepts>
