@@ -8,9 +8,8 @@
 
 namespace maomao90 {
     template <integral T>
-    constexpr bool miller_rabin(const T &n, const T bases[], int size) {
-        using U = conditional_t<numeric_limits<T>::max() <= numeric_limits<unsigned int>::max(),
-              unsigned long long, unsigned __int128>;
+    constexpr bool miller_rabin(const T &n, const T *bases, const size_t size) {
+        using U = conditional_t<numeric_limits<T>::max() <= numeric_limits<unsigned int>::max(), unsigned long long, unsigned __int128>;
         if (n <= 1) {
             return false;
         }
@@ -38,12 +37,15 @@ namespace maomao90 {
         }
         return true;
     }
-    constexpr bool is_prime(unsigned int n) {
-        unsigned int bases[3] = {2, 7, 61};
-        return miller_rabin<unsigned int>(n, bases, 3);
-    }
-    constexpr bool is_prime(unsigned long long n) {
-        unsigned long long bases[7] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
-        return miller_rabin<unsigned long long>(n, bases, 7);
+    template <integral T>
+    constexpr bool is_prime(T n) {
+        constexpr bool is_32bit = numeric_limits<T>::max() <= numeric_limits<unsigned int>::max();
+        if constexpr (is_32bit) {
+            T bases[3] = {2, 7, 61};
+            return miller_rabin<T>(n, bases, 3);
+        } else {
+            T bases[7] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
+            return miller_rabin<T>(n, bases, 7);
+        }
     }
 }
