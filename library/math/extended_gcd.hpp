@@ -1,9 +1,10 @@
 #pragma once
 
 #include <cassert>
+#include <concepts>
 
 namespace maomao90 {
-    template <typename T>
+    template <signed_integral T>
     constexpr T inv_gcd(T x, T mod) {
         T a = mod, b = x, va = 0, vb = 1;
         while (b) {

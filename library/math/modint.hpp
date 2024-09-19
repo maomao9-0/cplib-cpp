@@ -131,7 +131,7 @@ namespace maomao90 {
             if constexpr (is_prime_mod) {
                 return pow(imod() - 2);
             } else {
-                return raw(inv_gcd<BM>(_v, imod()));
+                return raw(inv_gcd(_v, imod()));
             }
         }
 
