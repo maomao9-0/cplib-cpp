@@ -9,7 +9,7 @@ namespace maomao90 {
     template <typename T>
     concept Hashing = requires(T v) {
         { T::get_num_bases() } -> convertible_to<size_t>;
-        { v.get_v() } -> convertible_to<array<unsigned long long, T::get_num_bases()>>;
+        { v.get_v() } -> same_as<array<typename T::mint::umod_type, T::get_num_bases()>>;
     };
     template <Hashing T>
     struct HashingCustomHash {
