@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cassert>
+#include <type_traits>
 #include <concepts>
+#include <limits>
 
 namespace maomao90 {
     template <signed_integral T>
