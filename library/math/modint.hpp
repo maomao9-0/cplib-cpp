@@ -10,11 +10,26 @@
 #include <cassert>
 
 namespace maomao90 {
+    template <typename T>
+    concept Modint = requires (T a, T b, long long p) {
+        { T::imod() } -> same_as<typename T::mod_type>;
+        { T::umod() } -> same_as<typename T::umod_type>;
+        a++; a--; ++a; --a;
+        +a; -a;
+        a + b; a - b; a * b; a / b;
+        a += b; a -= b; a *= b; a /= b;
+        a.pow(p); a.inv();
+        a == b; a != b;
+    };
     template <signed_integral M = int, M mod = 998244353, enable_if_t<(mod >= 1), int> = 0>
     struct static_modint {
+    private:
         using UM = make_unsigned_t<M>;
         using BM = conditional_t<numeric_limits<M>::max() <= numeric_limits<int>::max(),
               long long, __int128>;
+    public:
+        using mod_type = M;
+        using umod_type = UM;
         static constexpr M imod() {
             return mod;
         }
