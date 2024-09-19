@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 namespace maomao90 {
     template <typename T>
     constexpr T inv_gcd(T x, T mod) {
@@ -10,7 +12,7 @@ namespace maomao90 {
             swap(a, b);
             swap(va, vb);
         }
-        assert(a == 1); // gcd should be equals to 1
+        assert(a == 1); // gcd should be equal to 1
         return (va % mod + mod) % mod;
     }
 }
