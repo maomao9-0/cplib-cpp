@@ -1,6 +1,9 @@
-using namespace std;
+#define PROBLEM "https://judge.yosupo.jp/problem/sum_of_multiplicative_function"
 
 #include <iostream>
+#include <vector>
+#include <utility>
+using namespace std;
 
 #include "library/math/min25_sieve.hpp"
 #include "library/math/poly.hpp"

@@ -1,6 +1,5 @@
 #define PROBLEM "https://judge.yosupo.jp/problem/primality_test"
 
-
 #include <iostream>
 #include <cassert>
 #include <limits>
