@@ -2,6 +2,7 @@
 
 #include "library/math/extended_gcd.hpp"
 #include "library/math/primality_test.hpp"
+#include "library/internal/internal_concepts.hpp"
 
 #include <type_traits>
 #include <concepts>
@@ -11,16 +12,19 @@
 
 namespace maomao90 {
     template <typename T>
-    concept Modint = requires (T a, T b, long long p) {
+    concept Modint = requires (T a, long long p) {
         { T::imod() } -> same_as<typename T::mod_type>;
         { T::umod() } -> same_as<typename T::umod_type>;
         a++; a--; ++a; --a;
         +a; -a;
-        a + b; a - b; a * b; a / b;
-        a += b; a -= b; a *= b; a /= b;
         a.pow(p); a.inv();
-        a == b; a != b;
-    };
+    } &&
+        internal::concepts::Addable<T> &&
+        internal::concepts::Subtractable<T> &&
+        internal::concepts::Multipliable<T> &&
+        internal::concepts::Dividable<T> &&
+        equality_comparable<T>;
+
     template <signed_integral M = int, M mod = 998244353, enable_if_t<(mod >= 1), int> = 0>
     struct static_modint {
     private:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "library/math/poly.hpp"
+#include "library/internal/internal_concepts.hpp"
 
 #include <concepts>
 #include <utility>
@@ -13,7 +14,10 @@ namespace maomao90 {
     // g is a function that returns the value of g(prime)
     // returns prefix sum of g at prime indices with the same range as sumg
     template <typename T, typename G> requires
-        requires(G g, long long prime) { { g(prime) } -> same_as<T>; }
+        requires(G g, long long prime) { { g(prime) } -> same_as<T>; } &&
+        internal::concepts::Addable<T> &&
+        internal::concepts::Subtractable<T> &&
+        internal::concepts::Multipliable<T>
     vector<T> lucy_dp(long long n, vector<T> sumg, G g) {
         assert(sumg.size() % 2 == 0);
         long long m = sumg.size() / 2;
@@ -55,7 +59,10 @@ namespace maomao90 {
         return sumgp;
     }
     template <typename T, typename F> requires 
-        requires(F f, long long prime, int power) { { f(prime, power) } -> same_as<T>; }
+        requires(F f, long long prime, int power) { { f(prime, power) } -> same_as<T>; } &&
+        internal::concepts::Addable<T> &&
+        internal::concepts::Subtractable<T> &&
+        internal::concepts::Multipliable<T>
     vector<T> min25_sieve(long long n, F f, vector<T> sumfp) {
         assert(sumfp.size() % 2 == 0);
         long long m = sumfp.size() / 2;
