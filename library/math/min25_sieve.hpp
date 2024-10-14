@@ -5,100 +5,110 @@
 #include <concepts>
 #include <utility>
 #include <vector>
+#include <cassert>
 
 namespace maomao90 {
-    template <typename T, typename F> requires 
-        requires(F f, long long prime, int power) { { f(prime, power) } -> same_as<T>; }
-    vector<pair<long long, T>> min25_sieve(long long n, F f, Poly<T> g) {
-        long long sqrt = 1;
-        while ((sqrt + 1) * (sqrt + 1) <= n) {
-            sqrt++;
-        }
-        vector<bool> is_prime(sqrt + 1);
-        for (int i = 2; i <= sqrt; i++) {
+    // sumg is a vector of size 2 * m where sumg[i] represents prefix sum of
+    // g from 2 to i + 1 for i < m, otherwise, sum from 2 to n / (2 * m - i)
+    // g is a function that returns the value of g(prime)
+    // returns prefix sum of g at prime indices with the same range as sumg
+    template <typename T, typename G> requires
+        requires(G g, long long prime) { { g(prime) } -> same_as<T>; }
+    vector<T> lucy_dp(long long n, vector<T> sumg, G g) {
+        assert(sumg.size() % 2 == 0);
+        long long m = sumg.size() / 2;
+        assert(m * m <= n && (m + 1) * (m + 1) > n);
+        vector<bool> is_prime(m + 1);
+        for (int i = 2; i <= m; i++) {
             is_prime[i] = 1;
         }
-        for (int i = 2; i * i <= sqrt; i++) {
+        for (int i = 2; i * i <= m; i++) {
             if (!is_prime[i]) {
                 continue;
             }
-            for (int j = i * i; j <= sqrt; j += i) {
+            for (int j = i * i; j <= m; j += i) {
                 is_prime[j] = 0;
             }
         }
-        vector<T> small_fp(sqrt + 1), big_fp(sqrt + 1), small_sieve(sqrt + 1), big_sieve(sqrt + 1), pow(sqrt + 1);
-        vector<long long> div(sqrt + 1);
-        for (int i = 1; i <= sqrt; i++) {
-            pow[i] = 1;
+        vector<long long> div(m + 1);
+        vector<T> sumgp = sumg;
+        for (int i = 1; i <= m; i++) {
             div[i] = n / i;
         }
-        auto interpolate = [&] (int d, long long x) {
-            if (d == 0) {
-                return T(x) - 1;
-            } else if (d == 1) {
-                return T(x) * (x + 1) / 2 - 1;
-            } else {
-                return T(0);
-            }
-        };
-        for (int d = 0; d <= g.degree(); d++) {
-            vector<T> small_gp(sqrt + 1), big_gp(sqrt + 1);
-            for (int i = 1; i <= sqrt; i++) {
-                // initialise small_gp and big_gp
-                small_gp[i] = interpolate(d, i);
-                big_gp[i] = interpolate(d, div[i]);
-            }
-            for (int prime = 2; prime <= sqrt; prime++) {
-                if (!is_prime[prime]) {
-                    continue;
-                }
-                for (int i = 1; i <= sqrt; i++) {
-                    if (div[i] < (long long) prime * prime) {
-                        break;
-                    }
-                    T div_gp = (long long) i * prime <= sqrt ? big_gp[i * prime] : small_gp[div[i] / prime];
-                    big_gp[i] -= pow[prime] * (div_gp - small_gp[prime - 1]);
-                }
-                for (int i = sqrt; i >= (long long) prime * prime; i--) {
-                    small_gp[i] -= pow[prime] * (small_gp[i / prime] - small_gp[prime - 1]);
-                }
-                pow[prime] *= prime;
-            }
-            for (int i = 1; i <= sqrt; i++) {
-                small_fp[i] += small_gp[i] * g[d];
-                big_fp[i] += big_gp[i] * g[d];
-            }
-        }
-        for (int i = 1; i <= sqrt; i++) {
-            small_sieve[i] = small_fp[i];
-            big_sieve[i] = big_fp[i];
-        }
-        for (int prime = sqrt; prime >= 2; prime--) {
+        for (int prime = 2; prime <= m; prime++) {
             if (!is_prime[prime]) {
                 continue;
             }
-            for (int i = 1; i <= sqrt; i++) {
-                if (div[i] < (long long) prime * prime) {
+            long long prime_squared = (long long) prime * prime,
+                 iprime = prime;
+            for (int i = 1; i <= m; i++, iprime += prime) {
+                if (div[i] < prime_squared) {
                     break;
                 }
-                int pow = 1;
-                for (long long prime_pow = prime; prime_pow <= div[i] / prime; prime_pow *= prime, pow++) {
-                    T div_sieve = i * prime_pow <= sqrt ? big_sieve[i * prime_pow] : small_sieve[div[i] / prime_pow];
-                    big_sieve[i] += f(prime, pow) * (div_sieve - small_fp[prime]) + f(prime, pow + 1);
-                }
+                T div_val = iprime <= m ? sumgp[2 * m - iprime] : sumgp[div[i] / prime - 1];
+                sumgp[2 * m - i] -= g(prime) * (div_val - sumgp[prime - 2]);
             }
-            for (int i = sqrt; i >= (long long) prime * prime; i--) {
-                int pow = 1;
-                for (long long prime_pow = prime; prime_pow <= i / prime; prime_pow *= prime, pow++) {
-                    small_sieve[i] += f(prime, pow) * (small_sieve[i / prime_pow] - small_fp[prime]) + f(prime, pow + 1);
-                }
+            for (int i = m; i >= prime_squared; i--) {
+                sumgp[i - 1] -= g(prime) * (sumgp[i / prime - 1] - sumgp[prime - 2]);
             }
         }
-        vector<pair<long long, T>> res(2 * sqrt);
-        for (int i = 1; i <= sqrt; i++) {
-            res[i - 1] = {i, small_sieve[i] + 1};
-            res[2 * sqrt - i] = {div[i], big_sieve[i] + 1};
+        return sumgp;
+    }
+    template <typename T, typename F> requires 
+        requires(F f, long long prime, int power) { { f(prime, power) } -> same_as<T>; }
+    vector<T> min25_sieve(long long n, F f, vector<T> sumfp) {
+        assert(sumfp.size() % 2 == 0);
+        long long m = sumfp.size() / 2;
+        assert(m * m <= n && (m + 1) * (m + 1) > n);
+        vector<bool> is_prime(m + 1);
+        for (int i = 2; i <= m; i++) {
+            is_prime[i] = 1;
         }
-        return res;
+        for (int i = 2; i * i <= m; i++) {
+            if (!is_prime[i]) {
+                continue;
+            }
+            for (int j = i * i; j <= m; j += i) {
+                is_prime[j] = 0;
+            }
+        }
+        vector<long long> div(m + 1);
+        vector<T> sumf = sumfp, _sumf = sumf, nsumf = sumfp;
+        for (int i = 1; i <= m; i++) {
+            div[i] = n / i;
+        }
+        for (int prime = m; prime >= 2; prime--) {
+            if (!is_prime[prime]) {
+                continue;
+            }
+            int pow = 1;
+            for (long long prime_pow = prime; div[prime] >= prime_pow; prime_pow *= prime, pow++) {
+                for (int i = 1; i <= m; i++) {
+                    long long divprime = div[i] / prime_pow;
+                    if (divprime < prime) {
+                        break;
+                    }
+                    T div_val = i * prime_pow <= m ? sumf[2 * m - i * prime_pow] : sumf[divprime - 1];
+                    _sumf[2 * m - i] += f(prime, pow) * (div_val - sumfp[prime - 1]) + f(prime, pow + 1);
+                }
+                for (int i = m; i >= 1; i--) {
+                    long long divprime = i / prime_pow;
+                    if (divprime < prime) {
+                        break;
+                    }
+                    _sumf[i - 1] += f(prime, pow) * (sumf[divprime - 1] - sumf[prime - 1]) + f(prime, pow + 1);
+                }
+            }
+            long long prime_squared = (long long) prime * prime;
+            int lim = prime_squared <= m ? prime_squared - 1 :
+                2 * m - n / prime_squared;
+            for (int i = 2 * m - 1; i >= lim; i--) {
+                sumf[i] = _sumf[i];
+            }
+        }
+        for (int i = 0; i < 2 * m; i++) {
+            sumf[i]++;
+        }
+        return sumf;
     }
 }
