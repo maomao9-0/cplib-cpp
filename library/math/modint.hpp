@@ -37,13 +37,13 @@ namespace maomao90 {
             return mod;
         }
 
-        static_modint(): _v(0) {}
-
         static constexpr static_modint raw(M v) {
             static_modint res;
             res._v = v;
             return res;
         }
+
+        constexpr static_modint(): _v(0) {}
 
         template <signed_integral T>
         constexpr static_modint(T v) {
