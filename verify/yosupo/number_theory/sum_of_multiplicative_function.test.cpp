@@ -5,7 +5,7 @@
 #include <utility>
 using namespace std;
 
-#include "library/math/min25_sieve.hpp"
+#include "library/math/multiplicative_function.hpp"
 #include "library/math/poly.hpp"
 #include "library/math/modint.hpp"
 using namespace maomao90;
