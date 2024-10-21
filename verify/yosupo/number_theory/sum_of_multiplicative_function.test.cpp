@@ -43,7 +43,7 @@ int main() {
         auto f = [&] (long long p, int e) {
             return mint(a) * e + mint(b) * p;
         };
-        vector<mint> sumf = min25_sieve(n, f, sumfp);
+        vector<mint> sumf = min25_sieve(n, sumfp, f);
         cout << sumf.back() << '\n';
     }
     return 0;

@@ -63,7 +63,7 @@ namespace maomao90 {
         internal::concepts::Addable<T> &&
         internal::concepts::Subtractable<T> &&
         internal::concepts::Multipliable<T>
-    vector<T> min25_sieve(long long n, F f, vector<T> sumfp) {
+    vector<T> min25_sieve(long long n, vector<T> sumfp, F f) {
         assert(sumfp.size() % 2 == 0);
         long long m = sumfp.size() / 2;
         assert(m * m <= n && (m + 1) * (m + 1) > n);
