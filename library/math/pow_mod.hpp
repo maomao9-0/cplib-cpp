@@ -6,10 +6,10 @@
 #include <concepts>
 
 namespace maomao90 {
-    template <integral T> requires
+    template <integral T, unsigned_integral P> requires
         internal::type_traits::is_64bit_or_less_v<T>
-    constexpr T pow_mod(T b, T p, T mod) {
-        using U = conditional_t<internal::type_traits::is_32bit_or_less_v<T>, unsigned long long, unsigned __int128>;
+    constexpr T pow_mod(T b, P p, T mod) {
+        using U = internal::type_traits::safely_multipliable_t<T>;
         T res = 1;
         b %= mod;
         if (b < 0) {

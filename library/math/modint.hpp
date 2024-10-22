@@ -32,7 +32,7 @@ namespace maomao90 {
     private:
         using M = decltype(mod);
         using UM = make_unsigned_t<M>;
-        using BM = conditional_t<internal::type_traits::is_32bit_or_less_v<M>, long long, __int128>;
+        using BM = internal::type_traits::safely_multipliable_t<M>;
     public:
         using mod_type = M;
         using umod_type = UM;

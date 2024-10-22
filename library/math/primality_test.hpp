@@ -7,9 +7,9 @@
 #include <type_traits>
 
 namespace maomao90 {
-    template <integral T>
+    template <unsigned_integral T>
     constexpr bool miller_rabin(const T &n, const T *bases, const size_t size) {
-        using U = conditional_t<internal::type_traits::is_32bit_or_less_v<T>, unsigned long long, unsigned __int128>;
+        using U = internal::type_traits::safely_multipliable_t<T>;
         if (n <= 1) {
             return false;
         }
@@ -26,7 +26,7 @@ namespace maomao90 {
             if (a % n == 0) {
                 continue;
             }
-            T t = d, y = pow_mod<T>(a, t, n);
+            T t = d, y = pow_mod<T, T>(a, t, n);
             while (t != n - 1 && y != 1 && y != n - 1) {
                 y = (U) y * y % n;
                 t <<= 1;
@@ -37,7 +37,7 @@ namespace maomao90 {
         }
         return true;
     }
-    template <integral T>
+    template <unsigned_integral T>
     constexpr bool is_prime(T n) {
         if constexpr (internal::type_traits::is_32bit_or_less_v<T>) {
             T bases[3] = {2, 7, 61};
