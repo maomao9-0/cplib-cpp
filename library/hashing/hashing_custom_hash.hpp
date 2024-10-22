@@ -1,6 +1,6 @@
 #pragma once
 
-#include "library/hashing/internal.hpp"
+#include "library/internal/hashing.hpp"
 
 #include <array>
 #include <concepts>
