@@ -24,7 +24,11 @@ namespace maomao90::internal::type_traits {
     ENABLE_TYPE(safely_multipliable_unsigned);
 
     template <typename T>
-    using safely_multipliable = conditional<is_signed_v<T>, make_signed_t<safely_multipliable_unsigned_t<T>>, safely_multipliable_unsigned_t<T>>;
+    using safely_multipliable_signed = conditional<is_32bit_or_less_v<T>, long long, __int128>;
+    ENABLE_TYPE(safely_multipliable_signed);
+
+    template <typename T>
+    using safely_multipliable = conditional<is_signed_v<T>, safely_multipliable_signed_t<T>, safely_multipliable_unsigned_t<T>>;
     ENABLE_TYPE(safely_multipliable);
 
 #undef ENABLE_VALUE
