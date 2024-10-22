@@ -66,24 +66,33 @@ When evaluated at prime values $p$, $f(p) = p^2 + p$. Using $g(p) = p^2 + p$ as 
 Instead, what we can do is to use two different functions $g_1(p) = p$ and $g_2(p) = p^2$. Both $g_1$ and $g_2$ are multiplicative functions, and we can easily get their prefix sums in $O(1)$ time, so they are good candidates to use in `lucy_dp`. We can sum up their results to get the prefix sum of $(p^2 + p)[\texttt{is\_prime}(p)]$, which we can use as `sumfp` for the input of `min25_sieve`.
 
 ```c++
-int s = floor(sqrt(n));
-auto g1 = [&] (long long p) { return p; };
-auto g2 = [&] (long long p) { return p * p; };
-vector<long long> sumg1(2 * s), sumg2(2 * s);
-for (int i = 1; i <= s; i++) {
-	auto prefix_sum_g1 = [&] (long long x) { return x * (x + 1) / 2 - 1; };
-	sumg1[i - 1] = prefix_sum_g1(i);
-	sumg1[2 * s - i] = prefix_sum_g1(n / i);
-	auto prefix_sum_g2 = [&] (long long x) { return x * (x + 1) * (2 * x + 1) / 6 - 1; }
-	sumg2[i - 1] = prefix_sum_g2(i);
-	sumg2[2 * s - i] = prefix_sum_g2(n / i);
+#include <iostream>
+#include <cmath>
+using namespace std;
+#include "library/math/multiplicative_function.hpp"
+using namespace maomao90;
+
+int main() {
+    long long n; cin >> n;
+    int s = floor(sqrt(n));
+    auto g1 = [&] (long long p) { return p; };
+    auto g2 = [&] (long long p) { return p * p; };
+    vector<long long> sumg1(2 * s), sumg2(2 * s);
+    for (int i = 1; i <= s; i++) {
+        auto prefix_sum_g1 = [&] (long long x) { return x * (x + 1) / 2 - 1; };
+        sumg1[i - 1] = prefix_sum_g1(i);
+        sumg1[2 * s - i] = prefix_sum_g1(n / i);
+        auto prefix_sum_g2 = [&] (long long x) { return x * (x + 1) * (2 * x + 1) / 6 - 1; };
+        sumg2[i - 1] = prefix_sum_g2(i);
+        sumg2[2 * s - i] = prefix_sum_g2(n / i);
+    }
+    vector<long long> sumgp1 = lucy_dp(n, sumg1, g1), sumgp2 = lucy_dp(n, sumg2, g2);
+    vector<long long> sumfp(2 * s);
+    for (int i = 0; i < 2 * s; i++) {
+        sumfp[i] = sumgp1[i] + sumgp2[i];
+    }
+    auto f = [&] (long long p, int k) { return p * p + k * p; };
+    vector<long long> sumf = min25_sieve(n, sumfp, f);
+    cout << sumf.back() << '\n';
 }
-vector<long long> sumgp1 = lucy_dp(n, sumg1, g1), sumgp2 = lucy_dp(n, sumg2, g2);
-vector<long long> sumfp(2 * s);
-for (int i = 0; i < 2 * s; i++) {
-	sumfp[i] = sumgp1[i] + sumgp2[i];
-}
-auto f = [&] (long long p, int k) { return p * p + k * p; };
-vector<long long> sumf = min25_sieve(n, sumfp, f);
-cout << sumf.back() << '\n';
 ```
