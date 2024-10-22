@@ -1,4 +1,5 @@
 {
-"verify/unit_test/math/modint.test.cpp": "2024-10-22 11:28:02 +0800",
-"verify/yosupo/number_theory/primality_test.test.cpp": "2024-10-22 11:28:02 +0800"
+"verify/unit_test/math/modint.test.cpp": "2024-10-22 13:01:28 +0800",
+"verify/yosupo/number_theory/primality_test.test.cpp": "2024-10-22 13:01:28 +0800",
+"verify/yosupo/number_theory/sum_of_multiplicative_function.test.cpp": "2024-10-22 13:01:28 +0800"
 }
