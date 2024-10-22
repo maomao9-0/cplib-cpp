@@ -7,7 +7,7 @@
 #include <array>
 
 namespace maomao90 {
-    template <Modint modint = static_modint<long long, (1ll << 61) - 1>, size_t num_bases = 1, size_t CACHE = 1'000'000>
+    template <Modint modint = static_modint<(1ll << 61) - 1>, size_t num_bases = 1, size_t CACHE = 1'000'000>
     struct MultisetHash {
         using mint = modint;
         static constexpr size_t get_num_bases() {

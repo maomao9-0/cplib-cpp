@@ -166,7 +166,7 @@ void test(int testcases) {
 
 template <typename M, M mod>
 void test_wrapper(int testcases = 10000) {
-    test<static_modint<M, mod>>(testcases);
+    test<static_modint<mod>>(testcases);
 }
 
 int main() {

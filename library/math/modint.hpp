@@ -25,9 +25,10 @@ namespace maomao90 {
         internal::concepts::Dividable<T> &&
         equality_comparable<T>;
 
-    template <signed_integral M = int, M mod = 998244353, enable_if_t<(mod >= 1), int> = 0>
+    template <auto mod = 998244353, enable_if_t<(mod >= 1), nullptr_t> = nullptr> requires signed_integral<decltype(mod)>
     struct static_modint {
     private:
+        using M = decltype(mod);
         using UM = make_unsigned_t<M>;
         using BM = conditional_t<numeric_limits<M>::max() <= numeric_limits<int>::max(),
               long long, __int128>;
