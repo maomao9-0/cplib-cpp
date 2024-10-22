@@ -7,7 +7,8 @@
 #include <concepts>
 
 namespace maomao90 {
-    template <signed_integral T>
+    template <signed_integral T> requires
+        internal::type_traits::is_64bit_or_less_v<T>
     constexpr T inv_gcd(T x, T mod) {
         using U = conditional_t<internal::type_traits::is_32bit_or_less_v<T>, long long, __int128>;
         U a = mod, b = x, va = 0, vb = 1;
