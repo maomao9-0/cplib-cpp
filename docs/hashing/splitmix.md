@@ -1,4 +1,4 @@
 ---
 title: Splitmix
-documentation_of: //library/math/splitmix.hpp
+documentation_of: //library/hashing/splitmix.hpp
 ---

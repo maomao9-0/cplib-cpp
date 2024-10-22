@@ -1,4 +1,4 @@
 ---
 title: Multiset Hash
-documentation_of: //library/math/multiset_hash.hpp
+documentation_of: //library/hashing/multiset_hash.hpp
 ---

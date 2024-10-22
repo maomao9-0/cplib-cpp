@@ -45,7 +45,7 @@ vector<T> min25_sieve(long long n, vector<T> sumfp, F f)
 - `n` is the upper limit of the prefix sum.
 - `sumfp` is a vertor of size $2\lfloor\sqrt n\rfloor$. 
 
-  $\text{sumfp}_k = \begin{cases}\sum_{i=2}^{k+1} f(i)[\texttt{is\_prime}(i)] & \text{ for } 0\le k< \lfloor\sqrt n\rfloor\\\\ \sum_{i=2}^{\left\lfloor \frac{N}{2\lfloor\sqrt N\rfloor - k}\right\rfloor} f(i)[\texttt{is\_prime}(i)] & \text{ for } \lfloor\sqrt n\rfloor\le k< 2\lfloor\sqrt n\rfloor\end{cases}$
+  $\text{sumfp}\_k = \begin{cases}\sum_{i=2}^{k+1} f(i)[\texttt{is\_prime}(i)] & \text{ for } 0\le k< \lfloor\sqrt n\rfloor\\\\ \sum_{i=2}^{\left\lfloor \frac{N}{2\lfloor\sqrt N\rfloor - k}\right\rfloor} f(i)[\texttt{is\_prime}(i)] & \text{ for } \lfloor\sqrt n\rfloor\le k< 2\lfloor\sqrt n\rfloor\end{cases}$
 
   In simpler terms, `sumfp` contains the prefix sum of the function $f$ at the positive integer values of $\left\lfloor\frac{N}{k}\right\rfloor$.
 - `f` is the multiplicative function $f$. `f(p, k)` should return the value of $f(p^k)$ where $p$ is a prime. Note that this is sufficient to evaluate $f$ at any positive integer since $f$ is multiplicative.
