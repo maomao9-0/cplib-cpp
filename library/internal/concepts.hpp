@@ -2,7 +2,7 @@
 
 #include <concepts>
 
-namespace internal::concepts {
+namespace maomao90::internal::concepts {
     template <typename T>
     concept Addable = requires (T a) {
         a + a;
