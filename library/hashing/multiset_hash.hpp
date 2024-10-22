@@ -2,7 +2,7 @@
 
 #include "library/math/modint.hpp"
 #include "library/hashing/splitmix.hpp"
-#include "library/hashing/internal.hpp"
+#include "library/internal/hashing.hpp"
 
 #include <array>
 
