@@ -19,7 +19,7 @@ namespace internal::concepts {
         a *= a;
     };
     template <typename T>
-    concept Dividable =  requires (T a) {
+    concept Dividable = requires (T a) {
         a / a;
         a /= a;
     };

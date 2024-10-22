@@ -1,7 +1,7 @@
 #pragma once
 
 #include "library/math/poly.hpp"
-#include "library/internal/internal_concepts.hpp"
+#include "library/internal/concepts.hpp"
 
 #include <concepts>
 #include <utility>

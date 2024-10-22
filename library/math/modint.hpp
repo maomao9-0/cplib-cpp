@@ -2,11 +2,11 @@
 
 #include "library/math/extended_gcd.hpp"
 #include "library/math/primality_test.hpp"
-#include "library/internal/internal_concepts.hpp"
+#include "library/internal/concepts.hpp"
+#include "library/internal/type_traits.hpp"
 
 #include <type_traits>
 #include <concepts>
-#include <limits>
 #include <iostream>
 #include <cassert>
 
@@ -25,13 +25,14 @@ namespace maomao90 {
         internal::concepts::Dividable<T> &&
         equality_comparable<T>;
 
-    template <auto mod = 998244353, enable_if_t<(mod >= 1), nullptr_t> = nullptr> requires signed_integral<decltype(mod)>
+    template <auto mod = 998244353, enable_if_t<(mod >= 1), nullptr_t> = nullptr> requires 
+        signed_integral<decltype(mod)> && 
+        internal::type_traits::is_64bit_or_less_v<decltype(mod)>
     struct static_modint {
     private:
         using M = decltype(mod);
         using UM = make_unsigned_t<M>;
-        using BM = conditional_t<numeric_limits<M>::max() <= numeric_limits<int>::max(),
-              long long, __int128>;
+        using BM = conditional_t<internal::type_traits::is_32bit_or_less_v<M>, long long, __int128>;
     public:
         using mod_type = M;
         using umod_type = UM;

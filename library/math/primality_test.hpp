@@ -1,15 +1,15 @@
 #pragma once
 
 #include "library/math/pow_mod.hpp"
+#include "library/internal/type_traits.hpp"
 
 #include <concepts>
 #include <type_traits>
-#include <limits>
 
 namespace maomao90 {
     template <integral T>
     constexpr bool miller_rabin(const T &n, const T *bases, const size_t size) {
-        using U = conditional_t<numeric_limits<T>::max() <= numeric_limits<unsigned int>::max(), unsigned long long, unsigned __int128>;
+        using U = conditional_t<internal::type_traits::is_32bit_or_less_v<T>, unsigned long long, unsigned __int128>;
         if (n <= 1) {
             return false;
         }
@@ -39,8 +39,7 @@ namespace maomao90 {
     }
     template <integral T>
     constexpr bool is_prime(T n) {
-        constexpr bool is_32bit = numeric_limits<T>::max() <= numeric_limits<unsigned int>::max();
-        if constexpr (is_32bit) {
+        if constexpr (internal::type_traits::is_32bit_or_less_v<T>) {
             T bases[3] = {2, 7, 61};
             return miller_rabin<T>(n, bases, 3);
         } else {
