@@ -9,7 +9,7 @@ using namespace std;
 #include "library/math/poly.hpp"
 #include "library/math/modint.hpp"
 using namespace maomao90;
-using mint = static_modint<int, 469762049>;
+using mint = static_modint<469762049>;
 
 int t;
 long long n;
