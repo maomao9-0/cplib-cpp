@@ -77,7 +77,7 @@ namespace maomao90 {
         constexpr bool operator!=(const MultisetHash &o) const {
             return !(*this == o);
         }
-        private:
+    private:
         array<mint, num_bases> _v;
         inline static const array<mint, num_bases> 
             bases = internal::hashing::gen_bases<mint, num_bases>(),
