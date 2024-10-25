@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <limits>
+#include <utility>
 
 namespace maomao90::internal::type_traits {
 #define ENABLE_VALUE(x) \
@@ -31,5 +32,13 @@ namespace maomao90::internal::type_traits {
     using safely_multipliable = conditional<is_signed_v<T>, safely_multipliable_signed_t<T>, safely_multipliable_unsigned_t<T>>;
     ENABLE_TYPE(safely_multipliable);
 
+    
+    template <typename>
+    struct is_pair : false_type {};
+    template <typename T, typename U>
+    struct is_pair<pair<T, U>> : true_type {};
+    ENABLE_TYPE(is_pair)
+
 #undef ENABLE_VALUE
+#undef ENABLE_TYPE(x)
 }
