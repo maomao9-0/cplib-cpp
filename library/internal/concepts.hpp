@@ -9,10 +9,10 @@ namespace maomao90::internal::concepts {
     concept broadly_integral = internal::type_traits::is_broadly_integral_v<T>;
 
     template <typename T>
-    concept broadly_signed = internal::type_traits::is_broadly_signed_v<T>;
+    concept broadly_signed_integral = internal::type_traits::is_broadly_signed_integral_v<T>;
 
     template <typename T>
-    concept broadly_unsigned = internal::type_traits::is_broadly_unsigned_v<T>;
+    concept broadly_unsigned_integral = internal::type_traits::is_broadly_unsigned_integral_v<T>;
 
     template <typename T>
     concept Addable = requires(T a) {

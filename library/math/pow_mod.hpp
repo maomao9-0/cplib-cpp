@@ -6,7 +6,7 @@
 #include <concepts>
 
 namespace maomao90 {
-    template <integral T, unsigned_integral P> requires
+    template <integral T, internal::concepts::broadly_unsigned_integral P> requires
         internal::type_traits::is_64bit_or_less_v<T>
     constexpr T pow_mod(T b, P p, T mod) {
         using U = internal::type_traits::safely_multipliable_t<T>;

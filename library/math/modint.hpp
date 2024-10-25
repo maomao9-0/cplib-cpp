@@ -51,7 +51,7 @@ namespace maomao90 {
 
         constexpr static_modint(): _v(0) {}
 
-        template <signed_integral T>
+        template <internal::concepts::broadly_signed_integral T>
         constexpr static_modint(T v) {
             M x = v % imod();
             if (x < 0) {
@@ -60,7 +60,7 @@ namespace maomao90 {
             _v = x;
         }
 
-        template <unsigned_integral T>
+        template <internal::concepts::broadly_unsigned_integral T>
         constexpr static_modint(T v): _v(v % umod()) {}
 
         constexpr UM val() const {

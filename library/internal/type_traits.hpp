@@ -21,8 +21,16 @@ namespace maomao90::internal::type_traits {
     ENABLE_VALUE(is_broadly_unsigned);
 
     template <typename T>
-    using is_broadly_integral = disjunction<is_broadly_signed<T>, is_broadly_unsigned<T>>;
+    using is_broadly_integral = disjunction<is_integral<T>, is_same<T, __int128>, is_same<T, unsigned __int128>>;
     ENABLE_VALUE(is_broadly_integral);
+
+    template <typename T>
+    using is_broadly_signed_integral = conjunction<is_broadly_signed<T>, is_broadly_integral<T>>;
+    ENABLE_VALUE(is_broadly_signed_integral);
+
+    template <typename T>
+    using is_broadly_unsigned_integral = conjunction<is_broadly_unsigned<T>, is_broadly_integral<T>>;
+    ENABLE_VALUE(is_broadly_unsigned_integral);
 
 
     template <typename T>
