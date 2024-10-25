@@ -4,6 +4,9 @@
 #include <random>
 #include <chrono>
 
+#include "library/internal/type_traits.hpp"
+#include "library/internal/concepts.hpp"
+
 namespace maomao90::internal::hashing {
     const int MIN_HASH_BASE = 128;
     template <typename mint, size_t num_bases>
@@ -54,21 +57,18 @@ namespace maomao90::internal::hashing {
             constexpr unsigned long long z2 = 10150724397891781847ull;
             return hash_function(x.first) + hash_function(x.second) * z2;
         } else if constexpr (internal::concepts::Iterable<T>) {
-            constexpr unsigned long long mod = (1LL << 61) - 1;
+            constexpr unsigned long long mod = (1ll << 61) - 1;
             constexpr unsigned long long base = 950699498548472943ull;
             unsigned long long m = 0;
-            for (auto& z : x) {
-                unsigned long long w;
-                if constexpr (is_broadly_integral_v<T>) {
-                    w = (unsigned long long) z ^ r;
-                } else {
-                    w = hash_function(z);
+            for (auto &i : x) {
+                unsigned long long v = hash_function(i);
+                unsigned __int128 r = (unsigned __int128) m * base + (v & mod);
+                m = (r & mod) + (r >> 61);
+                if (m >= mod) {
+                    m -= mod;
                 }
-                unsigned __int128 y = (unsigned __int128) m * base + (w & mod);
-                m = (y & mod) + (y >> 61);
-                if (m >= mod) m -= mod;
             }
-            m ^= m << 24, m ^= m >> 31, m ^= m << 35;
+            m ^= m << 24; m ^= m >> 31; m ^= m << 35;
             return m;
         }
     }
