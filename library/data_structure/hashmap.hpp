@@ -51,8 +51,8 @@ namespace maomao90 {
         vector<int> history;
 
         constexpr int get_index(const K &k) const {
-            long long hash = Hash()(k);
-            int index = hash & (MOD - 1);
+            unsigned long long hash = Hash()(k);
+            int index = hash >> (64 - LG);
             while (vis[index] && key[index] != k) {
                 index = (index + 1) & (MOD - 1);
             }

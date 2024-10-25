@@ -4,18 +4,11 @@
 using namespace std;
 
 #include "library/data_structure/hashmap.hpp"
-#include "library/hashing/splitmix.hpp"
 using namespace maomao90;
-
-struct CustomHash {
-    constexpr long long operator()(const long long &o) const {
-        return splitmix64(o);
-    }
-};
 
 int main() {
     ios::sync_with_stdio(0), cin.tie(0);
-    HashMap<long long, long long, 20, CustomHash> hash_map;
+    HashMap<long long, long long> hash_map;
     int q; cin >> q;
     while (q--) {
         int t; cin >> t;
