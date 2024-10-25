@@ -1,7 +1,6 @@
 #pragma once
 
 #include "library/math/modint.hpp"
-#include "library/hashing/splitmix.hpp"
 #include "library/internal/hashing.hpp"
 
 #include <array>
