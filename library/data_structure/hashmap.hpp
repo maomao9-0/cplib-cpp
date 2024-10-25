@@ -5,7 +5,7 @@
 #include "library/internal/hashing.hpp"
 
 namespace maomao90 {
-    template <typename K, typename T, int LG = 20, class Hash = internal::hashing::HashObject<K>>
+    template <typename K, typename T, class Hash = internal::hashing::HashObject<K>, int LG = 20>
     struct HashMap {
         constexpr T& operator[](const K &k) {
             int index = get_index(k);
