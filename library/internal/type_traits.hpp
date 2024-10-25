@@ -58,7 +58,7 @@ namespace maomao90::internal::type_traits {
     struct is_pair : false_type {};
     template <typename T, typename U>
     struct is_pair<pair<T, U>> : true_type {};
-    ENABLE_TYPE(is_pair);
+    ENABLE_VALUE(is_pair);
 
 #undef ENABLE_VALUE
 #undef ENABLE_TYPE

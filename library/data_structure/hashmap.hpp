@@ -1,11 +1,12 @@
 #pragma once
 
 #include <bitset>
+#include <vector>
 
 #include "library/internal/hashing.hpp"
 
 namespace maomao90 {
-    template <typename K, typename T, class Hash = internal::hashing::HashObject<K>, int LG = 20>
+    template <typename K, typename T, typename Hash = internal::hashing::HashObject<K>, bool KEEP_HISTORY = false, int LG = 20>
     struct HashMap {
         constexpr T& operator[](const K &k) {
             int index = get_index(k);
@@ -13,6 +14,9 @@ namespace maomao90 {
                 vis[index] = 1;
                 key[index] = k;
                 value[index] = T();
+                if constexpr (KEEP_HISTORY) {
+                    history.push_back(index);
+                }
             }
             return value[index];
         }
@@ -30,13 +34,21 @@ namespace maomao90 {
         }
 
         constexpr void clear() {
-            vis.reset();
+            if constexpr (KEEP_HISTORY) {
+                for (int i : history) {
+                    vis[i] = 0;
+                }
+                history.clear();
+            } else {
+                vis.reset();
+            }
         }
     private:
         static constexpr int MOD = 1 << LG;
         bitset<MOD> vis;
         K key[MOD];
         T value[MOD];
+        vector<int> history;
 
         constexpr int get_index(const K &k) const {
             long long hash = Hash()(k);
