@@ -13,6 +13,19 @@ namespace maomao90::internal::type_traits {
     using x##_t = typename x<T>::type
 
     template <typename T>
+    using is_broadly_signed = disjunction<is_signed<T>, is_same<T, __int128>>;
+    ENABLE_VALUE(is_broadly_signed);
+
+    template <typename T>
+    using is_broadly_unsigned = disjunction<is_unsigned<T>, is_same<T, unsigned __int128>>;
+    ENABLE_VALUE(is_broadly_unsigned);
+
+    template <typename T>
+    using is_broadly_integral = disjunction<is_broadly_signed<T>, is_broadly_unsigned<T>>;
+    ENABLE_VALUE(is_broadly_integral);
+
+
+    template <typename T>
     using is_32bit_or_less = bool_constant<numeric_limits<T>::max() <= numeric_limits<unsigned int>::max()>;
     ENABLE_VALUE(is_32bit_or_less);
 
@@ -37,8 +50,8 @@ namespace maomao90::internal::type_traits {
     struct is_pair : false_type {};
     template <typename T, typename U>
     struct is_pair<pair<T, U>> : true_type {};
-    ENABLE_TYPE(is_pair)
+    ENABLE_TYPE(is_pair);
 
 #undef ENABLE_VALUE
-#undef ENABLE_TYPE(x)
+#undef ENABLE_TYPE
 }
