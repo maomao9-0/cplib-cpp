@@ -44,7 +44,7 @@ namespace maomao90::internal::hashing {
         return res;
     }
 
-    template <T>
+    template <typename T>
     constexpr unsigned long long hash_function(const T &x) {
         static unsigned long long r = chrono::high_resolution_clock::now().time_since_epoch().count();
         constexpr unsigned long long z1 = 11995408973635179863ULL;
@@ -70,6 +70,13 @@ namespace maomao90::internal::hashing {
             }
             m ^= m << 24, m ^= m >> 31, m ^= m << 35;
             return m;
+        }
+    }
+
+    template <typename T>
+    struct HashObject {
+        constexpr size_t operator()(const T &o) const {
+            return hash_function(o);
         }
     }
 }

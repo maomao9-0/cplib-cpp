@@ -2,8 +2,10 @@
 
 #include <bitset>
 
+#include "library/internal/hashing.hpp"
+
 namespace maomao90 {
-    template <typename K, typename T, int LG = 20, class Hash = hash<K>>
+    template <typename K, typename T, int LG = 20, class Hash = internal::hashing::HashObject<K>>
     struct HashMap {
         constexpr T& operator[](const K &k) {
             int index = get_index(k);
