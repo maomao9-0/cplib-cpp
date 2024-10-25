@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <limits>
+#include <utility>
 
 namespace maomao90::internal::type_traits {
 #define ENABLE_VALUE(x) \
@@ -10,6 +11,27 @@ namespace maomao90::internal::type_traits {
 #define ENABLE_TYPE(x) \
     template <typename T> \
     using x##_t = typename x<T>::type
+
+    template <typename T>
+    using is_broadly_signed = disjunction<is_signed<T>, is_same<T, __int128>>;
+    ENABLE_VALUE(is_broadly_signed);
+
+    template <typename T>
+    using is_broadly_unsigned = disjunction<is_unsigned<T>, is_same<T, unsigned __int128>>;
+    ENABLE_VALUE(is_broadly_unsigned);
+
+    template <typename T>
+    using is_broadly_integral = disjunction<is_integral<T>, is_same<T, __int128>, is_same<T, unsigned __int128>>;
+    ENABLE_VALUE(is_broadly_integral);
+
+    template <typename T>
+    using is_broadly_signed_integral = conjunction<is_broadly_signed<T>, is_broadly_integral<T>>;
+    ENABLE_VALUE(is_broadly_signed_integral);
+
+    template <typename T>
+    using is_broadly_unsigned_integral = conjunction<is_broadly_unsigned<T>, is_broadly_integral<T>>;
+    ENABLE_VALUE(is_broadly_unsigned_integral);
+
 
     template <typename T>
     using is_32bit_or_less = bool_constant<numeric_limits<T>::max() <= numeric_limits<unsigned int>::max()>;
@@ -31,5 +53,13 @@ namespace maomao90::internal::type_traits {
     using safely_multipliable = conditional<is_signed_v<T>, safely_multipliable_signed_t<T>, safely_multipliable_unsigned_t<T>>;
     ENABLE_TYPE(safely_multipliable);
 
+    
+    template <typename>
+    struct is_pair : false_type {};
+    template <typename T, typename U>
+    struct is_pair<pair<T, U>> : true_type {};
+    ENABLE_TYPE(is_pair);
+
 #undef ENABLE_VALUE
+#undef ENABLE_TYPE
 }

@@ -7,7 +7,8 @@
 #include <type_traits>
 
 namespace maomao90 {
-    template <unsigned_integral T>
+    template <unsigned_integral T> requires
+        internal::type_traits::is_64bit_or_less_v<T>
     constexpr bool miller_rabin(const T &n, const T *bases, const size_t size) {
         using U = internal::type_traits::safely_multipliable_t<T>;
         if (n <= 1) {
@@ -37,7 +38,8 @@ namespace maomao90 {
         }
         return true;
     }
-    template <unsigned_integral T>
+    template <unsigned_integral T> requires
+        internal::type_traits::is_64bit_or_less_v<T>
     constexpr bool is_prime(T n) {
         if constexpr (internal::type_traits::is_32bit_or_less_v<T>) {
             T bases[3] = {2, 7, 61};
