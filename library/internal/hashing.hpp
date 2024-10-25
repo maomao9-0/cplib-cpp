@@ -43,4 +43,33 @@ namespace maomao90::internal::hashing {
         }
         return res;
     }
+
+    template <T>
+    constexpr unsigned long long hash_function(const T &x) {
+        static unsigned long long r = chrono::high_resolution_clock::now().time_since_epoch().count();
+        constexpr unsigned long long z1 = 11995408973635179863ULL;
+        if constexpr (internal::type_traits::is_broadly_integral_v<T>) {
+            return ((unsigned long long) x ^ r) * z1;
+        } else if constexpr (internal::type_traits::is_pair<T>) {
+            constexpr unsigned long long z2 = 10150724397891781847ULL;
+            return hash_function(x.first) + hash_function(x.second) * z2;
+        } else if constexpr (internal::concepts::Iterable<T>) {
+            constexpr unsigned long long mod = (1LL << 61) - 1;
+            constexpr unsigned long long base = 950699498548472943ULL;
+            unsigned long long m = 0;
+            for (auto& z : x) {
+                unsigned long long w;
+                if constexpr (is_broadly_integral_v<T>) {
+                    w = (unsigned long long) z ^ r;
+                } else {
+                    w = hash_function(z);
+                }
+                unsigned __int128 y = (unsigned __int128) m * base + (w & mod);
+                m = (y & mod) + (y >> 61);
+                if (m >= mod) m -= mod;
+            }
+            m ^= m << 24, m ^= m >> 31, m ^= m << 35;
+            return m;
+        }
+    }
 }
