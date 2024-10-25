@@ -25,7 +25,7 @@ namespace maomao90::internal::concepts {
     };
 
     template <typename T>
-    concept Iterable = requires(T& t) {
+    concept Iterable = requires(T &t) {
         begin(t) != end(t);
         ++std::declval<decltype(begin(t))&>();
         *begin(t);
