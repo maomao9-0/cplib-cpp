@@ -5,7 +5,6 @@
 #include <vector>
 #include <cassert>
 
-#include "library/math/poly.hpp"
 #include "library/internal/concepts.hpp"
 
 namespace maomao90 {
