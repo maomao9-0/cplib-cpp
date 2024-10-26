@@ -40,9 +40,9 @@ template <
 	**Performance**: $O(\texttt{num\_bases})$.
 	
 - `operator+`, `operator+=`, `operator-`, `operator-=`  
-	Adds / subtract two multisets.  
+	Add / subtract two multisets.  
 	**Performance**: $O(\texttt{num\_bases})$.
 	
 - `operator==`, `operator!=`  
-	Compares two multisets.  
+	Compare two multisets.  
 	**Performance**: $O(\texttt{num\_bases})$.
