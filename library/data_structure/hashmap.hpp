@@ -33,6 +33,24 @@ namespace maomao90 {
             return vis[index];
         }
 
+        template <typename F> requires
+            requires (F f, const K &k, T &v) { f(k, v); }
+        constexpr void for_each(F f) {
+            if constexpr (KEEP_HISTORY) {
+                for (int i : history) {
+                    if (vis[i]) {
+                        f(key[i], value[i]);
+                    }
+                }
+            } else {
+                for (int i = 0; i < MOD; i++) {
+                    if (vis[i]) {
+                        f(key[i], value[i]);
+                    }
+                }
+            }
+        }
+
         constexpr void clear() {
             if constexpr (KEEP_HISTORY) {
                 for (int i : history) {
