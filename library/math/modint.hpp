@@ -1,14 +1,14 @@
 #pragma once
 
-#include "library/math/extended_gcd.hpp"
-#include "library/math/primality_test.hpp"
-#include "library/internal/concepts.hpp"
-#include "library/internal/type_traits.hpp"
-
 #include <type_traits>
 #include <concepts>
 #include <iostream>
 #include <cassert>
+
+#include "library/math/extended_gcd.hpp"
+#include "library/math/primality_test.hpp"
+#include "library/internal/concepts.hpp"
+#include "library/internal/type_traits.hpp"
 
 namespace maomao90 {
     template <typename T>

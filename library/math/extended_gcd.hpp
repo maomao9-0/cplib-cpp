@@ -1,10 +1,10 @@
 #pragma once
 
-#include "library/internal/type_traits.hpp"
-
 #include <cassert>
 #include <type_traits>
 #include <concepts>
+
+#include "library/internal/type_traits.hpp"
 
 namespace maomao90 {
     template <signed_integral T> requires

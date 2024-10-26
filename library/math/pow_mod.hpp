@@ -1,10 +1,10 @@
 #pragma once
 
-#include "library/internal/type_traits.hpp"
-#include "library/internal/concepts.hpp"
-
 #include <type_traits>
 #include <concepts>
+
+#include "library/internal/type_traits.hpp"
+#include "library/internal/concepts.hpp"
 
 namespace maomao90 {
     template <integral T, internal::concepts::broadly_unsigned_integral P> requires

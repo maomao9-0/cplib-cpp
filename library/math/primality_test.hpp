@@ -1,10 +1,10 @@
 #pragma once
 
-#include "library/math/pow_mod.hpp"
-#include "library/internal/type_traits.hpp"
-
 #include <concepts>
 #include <type_traits>
+
+#include "library/math/pow_mod.hpp"
+#include "library/internal/type_traits.hpp"
 
 namespace maomao90 {
     template <unsigned_integral T> requires

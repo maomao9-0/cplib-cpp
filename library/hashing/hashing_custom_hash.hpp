@@ -1,12 +1,12 @@
 #pragma once
 
-#include "library/internal/hashing.hpp"
-#include "library/internal/concepts.hpp"
-#include "library/math/modint.hpp"
-
 #include <array>
 #include <concepts>
 #include <type_traits>
+
+#include "library/internal/hashing.hpp"
+#include "library/internal/concepts.hpp"
+#include "library/math/modint.hpp"
 
 namespace maomao90 {
     template <typename T>

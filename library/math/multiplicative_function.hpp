@@ -1,12 +1,12 @@
 #pragma once
 
-#include "library/math/poly.hpp"
-#include "library/internal/concepts.hpp"
-
 #include <concepts>
 #include <utility>
 #include <vector>
 #include <cassert>
+
+#include "library/math/poly.hpp"
+#include "library/internal/concepts.hpp"
 
 namespace maomao90 {
     // sumg is a vector of size 2 * m where sumg[i] represents prefix sum of
