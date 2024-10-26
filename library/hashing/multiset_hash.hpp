@@ -81,7 +81,7 @@ namespace maomao90 {
         inline static const array<array<mint, CACHE>, num_bases>
             bases_pow = internal::hashing::init_power<mint, num_bases, CACHE>(bases),
                       inv_bases_pow = internal::hashing::init_power<mint, num_bases, CACHE>(inv_bases);
-        constexpr mint get_pow(int i, int p) const {
+        constexpr mint get_pow(int i, long long p) const {
             assert(i < num_bases);
             if (abs(p) < CACHE) {
                 return p >= 0 ? bases_pow[i][p] : inv_bases_pow[i][-p];
