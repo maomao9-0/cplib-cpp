@@ -12,7 +12,7 @@ By the nature of the algorithm, we can also obtain the prefix sum of the multipl
 ## Lucy DP
 
 ```cpp
-vector<T> lucy_dp(long long n, vector<T> sumg, G g)
+vector<T> lucy_dp(long long n, vector<T> sumg, G g);
 ```
 
 **Parameters**
@@ -36,7 +36,7 @@ The time complexity of `lucy_dp` is $O\left(\frac{N^{3/4}}{\log N}\right)$.
 ## Min25 Sieve
 
 ```cpp
-vector<T> min25_sieve(long long n, vector<T> sumfp, F f)
+vector<T> min25_sieve(long long n, vector<T> sumfp, F f);
 ```
 
 **Parameters**
