@@ -12,7 +12,7 @@
 
 namespace maomao90 {
     template <typename T>
-    concept Modint = requires (T a, long long p) {
+    concept ModInt = requires (T a, long long p) {
         { T::imod() } -> same_as<typename T::mod_type>;
         { T::umod() } -> same_as<typename T::umod_type>;
         a++; a--; ++a; --a;

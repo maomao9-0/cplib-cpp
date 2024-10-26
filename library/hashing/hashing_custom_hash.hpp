@@ -11,7 +11,7 @@
 namespace maomao90 {
     template <typename T>
     concept Hashing = requires(T v) {
-        requires Modint<typename T::mint>;
+        requires ModInt<typename T::mint>;
         requires internal::concepts::Iterable<decltype(v.get_v())>;
         requires is_same_v<typename decltype(v.get_v())::value_type, typename T::mint::umod_type>;
     };
