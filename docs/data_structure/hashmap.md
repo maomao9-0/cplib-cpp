@@ -27,22 +27,22 @@ template <
 
 ### Member functions
 
-- `T& operator[](const K &k);`
-	Access, modify or insert key `k`.
+- `T& operator[](const K &k);`  
+	Access, modify or insert key `k`.  
 	**Performance**: $O(1)$.
 	
-- `bool erase(const K &k);`
-	Erase key `k`. Returns `false` if key `k` is not found and `true` otherwise.
+- `bool erase(const K &k);`  
+	Erase key `k`. Returns `false` if key `k` is not found and `true` otherwise.  
 	**Perfomance**: $O(1)$.
 	
-- `bool contains(const K &k) const;` 
-	Returns whether key `k` has been accessed by operator `[]` before.
+- `bool contains(const K &k) const;`  
+	Returns whether key `k` has been accessed by operator `[]` before.  
 	**Performance**: $O(1)$.
 	
-- `void for_each(F f);`
-  Calls function `f(key, value)` on each element in the hashmap.
+- `void for_each(F f);`  
+  Calls function `f(key, value)` on each element in the hashmap.  
 	**Performance**: $O(\text{num\_insert})$ if `KEEP_HISTORY`, otherwise, $O\left(\frac{2^\text{LG}}{\omega}\right)$.
 	
-- `void clear();`
-	Clear the hashmap. 
+- `void clear();`  
+	Clear the hashmap.  
 	**Performance**: $O(\text{num\_insert})$ if `KEEP_HISTORY`, otherwise, $O\left(\frac{2^\text{LG}}{\omega}\right)$.
