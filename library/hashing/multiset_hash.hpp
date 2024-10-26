@@ -9,12 +9,9 @@ namespace maomao90 {
     template <Modint modint = static_modint<(1ll << 61) - 1>, size_t num_bases = 1, size_t CACHE = 1'000'000>
     struct MultisetHash {
         using mint = modint;
-        static constexpr size_t get_num_bases() {
-            return num_bases;
-        }
 
-        constexpr array<unsigned long long, num_bases> get_v() const {
-            array<unsigned long long, num_bases> res;
+        constexpr array<typename mint::umod_type, num_bases> get_v() const {
+            array<typename mint::umod_type, num_bases> res;
             for (int i = 0; i < num_bases; i++) {
                 res[i] = _v[i].val();
             }
