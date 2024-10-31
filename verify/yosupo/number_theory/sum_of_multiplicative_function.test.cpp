@@ -41,6 +41,7 @@ int main() {
             sumfp[i] = sumgp_0[i] * a + sumgp_1[i] * b;
         }
         auto f = [&] (long long p, int e) {
+            if (p == 1) return mint(1);
             return mint(a) * e + mint(b) * p;
         };
         vector<mint> sumf = min25_sieve(n, sumfp, f);

@@ -113,7 +113,7 @@ namespace maomao90 {
             }
         }
         for (int i = 0; i < 2 * m; i++) {
-            sumf[i]++;
+            sumf[i] += f(1, 0);
         }
         return sumf;
     }
