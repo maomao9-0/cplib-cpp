@@ -79,7 +79,7 @@ namespace maomao90 {
             }
         }
         vector<long long> div(m + 1);
-        vector<T> sumf = sumfp, _sumf = sumf, nsumf = sumfp;
+        vector<T> sumf = sumfp, _sumf = sumf;
         for (int i = 1; i <= m; i++) {
             div[i] = n / i;
         }
