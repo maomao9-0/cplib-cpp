@@ -9,9 +9,9 @@
 
 namespace maomao90::internal::hashing {
     const int MIN_HASH_BASE = 128;
+    static mt19937_64 rng(chrono::high_resolution_clock::now().time_since_epoch().count());
     template <typename mint, size_t num_bases>
     constexpr array<mint, num_bases> gen_bases() {
-        mt19937_64 rng(chrono::high_resolution_clock::now().time_since_epoch().count());
         array<mint, num_bases> res;
         for (int i = 0; i < num_bases; i++) {
             res[i] = mint::raw(rng() % (mint::umod() - MIN_HASH_BASE) + MIN_HASH_BASE);
