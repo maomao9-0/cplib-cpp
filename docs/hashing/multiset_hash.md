@@ -5,9 +5,9 @@ documentation_of: //library/hashing/multiset_hash.hpp
 
 ```c++
 template <
-    ModInt modint = static_modint<(1ll << 61) - 1>,
-    size_t num_bases = 1,
-    size_t CACHE = 1'000'000
+  ModInt modint = static_modint<(1ll << 61) - 1>,
+  size_t num_bases = 1,
+  size_t CACHE = 1'000'000
 > struct MultisetHash;
 ```
 

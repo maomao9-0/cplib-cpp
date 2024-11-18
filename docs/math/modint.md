@@ -5,7 +5,7 @@ documentation_of: //library/math/modint.hpp
 
 ```c++
 template <
-    typename T
+  typename T
 > concept ModInt;
 ```
 
@@ -13,7 +13,7 @@ The concept `ModInt<T>` is satisfied if `T` has static functions `imod()` and `u
 
 ```c++
 template <
-    auto mod = 998244353
+  auto mod = 998244353
 > struct static_modint;	
 ```
 
@@ -23,7 +23,7 @@ template <
 
 **Template requirements**
 
-- `mod` has to be a positive integer that is of type`signed_integral` with 64-bits or less.
+- `mod` has to be a positive integer that is of type `signed_integral` with 64-bits or less.
 
 ### Member types
 

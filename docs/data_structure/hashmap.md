@@ -5,11 +5,11 @@ documentation_of: //library/data_structure/hashmap.hpp
 
 ```c++
 template <
-    typename K,
-    typename T,
-    typename Hash = internal::hashing::HashObject<K>,
-    bool KEEP_HISTORY = false,
-    int LG = 20
+  typename K,
+  typename T,
+  typename Hash = internal::hashing::HashObject<K>,
+  bool KEEP_HISTORY = false,
+  int LG = 20
 > struct HashMap;
 ```
 

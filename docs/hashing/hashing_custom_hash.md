@@ -5,7 +5,7 @@ documentation_of: //library/hashing/hashing_custom_hash.hpp
 
 ```c++
 template <
-    typename T
+  typename T
 > concept Hashing;
 ```
 
@@ -13,7 +13,7 @@ The concept `Hashing<T>` is satisfied if `T` has member type `mint` satisfying `
 
 ```c++
 template <
-    Hashing T
+  Hashing T
 > struct HashingCustomHash;
 ```
 
