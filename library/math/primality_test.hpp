@@ -23,7 +23,7 @@ constexpr bool miller_rabin(const T &n, const T *bases, const size_t size) {
   T d = n - 1;
   while (d % 2 == 0)
     d /= 2;
-  for (int i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     T a = bases[i];
     if (a % n == 0) {
       continue;
