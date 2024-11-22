@@ -40,6 +40,7 @@ private:
   using BM = internal::type_traits::safely_multipliable_t<M>;
 
 public:
+  static constexpr bool is_prime_mod = is_prime((UM)mod);
   using mod_type = M;
   using umod_type = UM;
   static constexpr M imod() { return mod; }
@@ -177,6 +178,5 @@ public:
 
 private:
   UM _v;
-  static constexpr bool is_prime_mod = is_prime(umod());
 };
 } // namespace maomao90
