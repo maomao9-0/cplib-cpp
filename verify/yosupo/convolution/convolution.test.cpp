@@ -1,4 +1,4 @@
-#define PROBLEM "https://judge.yosupo.jp/problem/covolution_mod"
+#define PROBLEM "https://judge.yosupo.jp/problem/convolution_mod"
 
 #include "library/math/modint.hpp"
 #include "library/math/poly.hpp"
