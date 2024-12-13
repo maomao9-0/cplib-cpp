@@ -10,7 +10,7 @@ namespace maomao90 {
 using namespace std;
 template <typename T>
 concept Hashing = requires(T v) {
-  requires ModInt<typename T::mint>;
+  requires StaticModInt<typename T::mint>;
   requires internal::concepts::Iterable<decltype(v.get_v())>;
   requires is_same_v<typename decltype(v.get_v())::value_type,
                      typename T::mint::umod_type>;
