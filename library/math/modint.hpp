@@ -6,6 +6,7 @@
 #include <type_traits>
 
 #include "library/internal/concepts.hpp"
+#include "library/internal/math.hpp"
 #include "library/internal/type_traits.hpp"
 #include "library/math/extended_gcd.hpp"
 #include "library/math/primality_test.hpp"
@@ -170,4 +171,145 @@ public:
 private:
   UM _v;
 };
+
+template <int id = -1> struct dynamic_modint : internal::modint::modint_base {
+public:
+  static void set_mod(int mod) {
+    assert(1 <= mod);
+    bt = internal::math::barrett(mod);
+  }
+  static constexpr int imod() { return bt.umod(); }
+  static constexpr unsigned int umod() { return bt.umod(); }
+
+  static constexpr dynamic_modint raw(int v) {
+    dynamic_modint res;
+    res._v = v;
+    return res;
+  }
+
+  constexpr dynamic_modint() : _v(0) {}
+
+  template <internal::concepts::broadly_signed_integral T>
+  constexpr dynamic_modint(T v) {
+    long long x = v % imod();
+    if (x < 0) {
+      x += imod();
+    }
+    _v = x;
+  }
+
+  template <internal::concepts::broadly_unsigned_integral T>
+  constexpr dynamic_modint(T v) : _v(v % umod()) {}
+
+  constexpr unsigned int val() const { return _v; }
+  constexpr dynamic_modint operator+() const { return *this; }
+  constexpr dynamic_modint operator-() const {
+    return raw(_v == 0 ? 0 : imod() - _v);
+  }
+
+  constexpr dynamic_modint &operator++() {
+    ++_v;
+    if (_v == umod()) {
+      _v = 0;
+    }
+    return *this;
+  }
+  constexpr dynamic_modint &operator--() {
+    if (_v == 0) {
+      _v = umod();
+    }
+    --_v;
+    return *this;
+  }
+  constexpr dynamic_modint operator++(int) {
+    dynamic_modint x = *this;
+    ++*this;
+    return x;
+  }
+  constexpr dynamic_modint operator--(int) {
+    dynamic_modint x = *this;
+    --*this;
+    return x;
+  }
+
+  constexpr dynamic_modint &operator+=(const dynamic_modint &o) {
+    _v += o._v;
+    if (_v >= umod()) {
+      _v -= umod();
+    }
+    return *this;
+  }
+  constexpr dynamic_modint &operator-=(const dynamic_modint &o) {
+    if (_v < o._v) {
+      _v += umod();
+    }
+    _v -= o._v;
+    return *this;
+  }
+  constexpr dynamic_modint &operator*=(const dynamic_modint &o) {
+    _v = bt.mul(_v, o._v);
+    //_v = (long long)_v * o._v % umod();
+    return *this;
+  }
+  constexpr dynamic_modint &operator/=(const dynamic_modint &o) {
+    return *this *= o.inv();
+  }
+
+  constexpr dynamic_modint pow(long long p) const {
+    assert(p >= 0);
+    dynamic_modint res = 1, b = *this;
+    while (p) {
+      if (p & 1) {
+        res *= b;
+      }
+      b *= b;
+      p >>= 1;
+    }
+    return res;
+  }
+  constexpr dynamic_modint inv() const { return raw(inv_gcd((int)_v, imod())); }
+
+  friend constexpr dynamic_modint operator+(const dynamic_modint &l,
+                                            const dynamic_modint &r) {
+    dynamic_modint res = l;
+    return res += r;
+  }
+  friend constexpr dynamic_modint operator-(const dynamic_modint &l,
+                                            const dynamic_modint &r) {
+    dynamic_modint res = l;
+    return res -= r;
+  }
+  friend constexpr dynamic_modint operator*(const dynamic_modint &l,
+                                            const dynamic_modint &r) {
+    dynamic_modint res = l;
+    return res *= r;
+  }
+  friend constexpr dynamic_modint operator/(const dynamic_modint &l,
+                                            const dynamic_modint &r) {
+    dynamic_modint res = l;
+    return res /= r;
+  }
+
+  constexpr bool operator==(const dynamic_modint &o) const {
+    return _v == o._v;
+  }
+  constexpr bool operator!=(const dynamic_modint &o) const {
+    return !(*this == o);
+  }
+
+  friend constexpr istream &operator>>(istream &is, dynamic_modint &o) {
+    int v;
+    is >> v;
+    o = dynamic_modint(v);
+    return is;
+  }
+  friend constexpr ostream &operator<<(ostream &os, const dynamic_modint &o) {
+    return os << o._v;
+  }
+
+private:
+  unsigned int _v;
+  static internal::math::barrett bt;
+};
+template <int id> internal::math::barrett dynamic_modint<id>::bt(998244353);
 } // namespace maomao90
