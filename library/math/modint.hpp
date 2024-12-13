@@ -11,29 +11,20 @@
 #include "library/math/primality_test.hpp"
 
 namespace maomao90 {
+namespace internal::modint {
+struct modint_base {};
+struct static_modint_base : modint_base {};
+} // namespace internal::modint
 using namespace std;
 template <typename T>
-concept ModInt =
-    requires(T a, long long p) {
-      { T::imod() } -> same_as<typename T::mod_type>;
-      { T::umod() } -> same_as<typename T::umod_type>;
-      a++;
-      a--;
-      ++a;
-      --a;
-      +a;
-      -a;
-      a.pow(p);
-      a.inv();
-    } && internal::concepts::Addable<T> &&
-    internal::concepts::Subtractable<T> &&
-    internal::concepts::Multipliable<T> && internal::concepts::Dividable<T> &&
-    equality_comparable<T>;
+concept ModInt = is_base_of_v<internal::modint::modint_base, T>;
+template <typename T>
+concept StaticModInt = is_base_of_v<internal::modint::static_modint_base, T>;
 
 template <auto mod = 998244353, enable_if_t<(mod >= 1), nullptr_t> = nullptr>
   requires signed_integral<decltype(mod)> &&
            internal::type_traits::is_64bit_or_less_v<decltype(mod)>
-struct static_modint {
+struct static_modint : internal::modint::static_modint_base {
 private:
   using M = decltype(mod);
   using UM = make_unsigned_t<M>;
