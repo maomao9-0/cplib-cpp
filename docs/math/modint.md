@@ -7,9 +7,13 @@ documentation_of: //library/math/modint.hpp
 template <
   typename T
 > concept ModInt;
+template <
+  typename T
+> concept StaticModInt;
 ```
 
-The concept `ModInt<T>` is satisfied if `T` has static functions `imod()` and `umod()` which returns the modulo with member type `mod_type` and `umod_type` respectively, has functions `pow(long long p)` and `inv()`, and has arithmetic and equality operators (+, -, *, /, ==, !=).
+The concept `ModInt<T>` is satisfied if `T` is either `static_modint` or `dynamic_modint`.
+`StaticModInt<T>` is only satisfied if `T` is `static_modint`.
 
 ```c++
 template <
