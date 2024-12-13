@@ -82,3 +82,66 @@ template <
 - `operator<<`, `operator>>`  
 	Serializes and deserializes a modint.  
 	**Performance**: $O(1)$
+
+
+```c++
+template <
+  int id = -1
+> struct dynamic_modint;	
+```
+
+### Template parameters
+
+- `id` - arbitrary id. Set different id for different mods.
+
+### Constructor
+
+- `dynamic_modint();`	 
+  Initialise modint with value $0$.
+  
+- `dynamic_modint(T v);`  
+  Initialise modint with value `v`.
+
+### Member functions
+
+- `static void set_mod(int mod);`  
+  Set mod to use.
+
+- `static dynamic_modint raw(int v);`  
+  Constant time optimisation to create `dynamic_modint` if $0\le \texttt{v} < \texttt{mod}$.
+
+- `unsigned int val() const;`  
+  Return value stored in `dynamic_modint`.
+
+- `dynamic_modint pow(long long p) const;`  
+  Returns `dynamic_modint` of the current value raised to the `p`-th power.  
+	**Performance**: $O(\log_2 \texttt{p})$
+
+- `dynamic_modint inv() const;`  
+  Returns `dynamic_modint` of the modular inverse of the current value.  
+  Note that the value stored in `dynamic_modint` has to be co-prime to `mod`. Otherwise, an assertion failure will occur.  
+	**Performance**: $O(\log_2 \texttt{mod})$
+
+- `operator+`, `operator+=`, `operator-`, `operator-=`, `operator*`, `operator*=`  
+	Add / subtract / multiply two modints.  
+	**Performance**: $O(1)$
+
+- `operator++`, `operator--`  
+	Prefix and postfix increment / decrement modint.  
+	**Performance**: $O(1)$
+
+- `operator/`, `operator/=`  
+	Divide two modints.  
+	**Performance**: $O(\log_2 \texttt{mod})$
+
+- `operator+`, `operator-`  
+	Unary operators.  
+	**Performance**: $O(1)$
+	
+- `operator==`, `operator!=`  
+	Compare two modints.  
+	**Performance**: $O(1)$
+	
+- `operator<<`, `operator>>`  
+	Serializes and deserializes a modint.  
+	**Performance**: $O(1)$
