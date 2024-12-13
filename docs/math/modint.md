@@ -48,10 +48,10 @@ template <
 - `static static_modint raw(mod_type v);`  
   Constant time optimisation to create `static_modint` if $0\le \texttt{v} < \texttt{mod}$.
 
-- `static constexpr mod_type imod();`
+- `static constexpr mod_type imod();`  
   Returns the signed value of `mod`.
   
-- `static constexpr umod_type umod();`
+- `static constexpr umod_type umod();`  
   Returns the unsigned value of `mod`.
 
 - `umod_type val() const;`  
@@ -115,10 +115,10 @@ template <
 - `static void set_mod(int mod);`  
   Set mod to use.
 
-- `static constexpr int imod();`
+- `static constexpr int imod();`  
   Returns the signed value of `mod`.
   
-- `static constexpr unsigned int umod();`
+- `static constexpr unsigned int umod();`  
   Returns the unsigned value of `mod`.
 
 - `static dynamic_modint raw(int v);`  
