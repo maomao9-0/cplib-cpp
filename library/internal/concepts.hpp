@@ -42,4 +42,16 @@ concept Iterable = requires(T &t) {
   ++std::declval<decltype(begin(t)) &>();
   *begin(t);
 };
+
+template <typename T>
+concept Monoid = requires(const T &a, const T &b) {
+  { T::id() } -> same_as<T>;
+  { a.merge(b) } -> same_as<T>;
+};
+
+template <typename L, typename T>
+concept Lazy = requires(const L &lz, const T &x, const int len) {
+  { lz.apply(x, len) } -> same_as<T>;
+  requires Monoid<L>;
+};
 } // namespace maomao90::internal::concepts

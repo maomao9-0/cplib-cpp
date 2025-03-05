@@ -1,28 +1,16 @@
 #pragma once
 
 #include <cassert>
-#include <concepts>
 #include <vector>
+
+#include "library/internal/concepts.hpp"
 
 namespace maomao90 {
 using namespace std;
-namespace internal::concepts {
-// left.merge(right)
-template <typename T>
-concept Monoid = requires(const T &a, const T &b) {
-  { T::id() } -> same_as<T>;
-  { a.merge(b) } -> same_as<T>;
-};
-
-// new_update.merge(old_update)
-template <typename L, typename T>
-concept Lazy = requires(const L &lz, const T &x, const int len) {
-  { lz.apply(x, len) } -> same_as<T>;
-  requires Monoid<L>;
-};
-} // namespace internal::concepts
 
 // 0-indexed
+// left_monoid.merge(right_monoid)
+// new_update.merge(old_update)
 template <internal::concepts::Monoid T, internal::concepts::Lazy<T> L>
 struct LazySegTree {
   LazySegTree() : LazySegTree(0) {}
