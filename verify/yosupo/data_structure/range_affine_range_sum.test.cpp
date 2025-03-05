@@ -42,15 +42,10 @@ int main() {
       r--;
       seg.upd(l, r, {b, c});
     } else {
-      int i;
-      cin >> i;
-      cout << seg.get(i).sm << '\n';
-      /*
       int l, r;
       cin >> l >> r;
       r--;
       cout << seg.qry(l, r).sm << '\n';
-      */
     }
   }
   return 0;
