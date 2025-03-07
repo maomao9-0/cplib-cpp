@@ -55,7 +55,7 @@ template <internal::concepts::Monoid T> struct SegTree {
     r += size;
 
     T sml = T::id(), smr = T::id();
-    int i = 1, l2 = l, r2 = r;
+    int i = 1;
     for (; l < r; i++, l >>= 1, r >>= 1) {
       if (l & 1) {
         sml = sml.merge(v[l++]);
