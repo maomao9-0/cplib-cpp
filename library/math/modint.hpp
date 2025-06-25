@@ -38,45 +38,45 @@ public:
   static constexpr M imod() { return mod; }
   static constexpr UM umod() { return mod; }
 
-  static constexpr static_modint raw(M v) {
+  static constexpr static_modint raw(M a) {
     static_modint res;
-    res._v = v;
+    res.v = a;
     return res;
   }
 
-  constexpr static_modint() : _v(0) {}
+  constexpr static_modint() : v(0) {}
 
   template <internal::concepts::broadly_signed_integral T>
-  constexpr static_modint(T v) {
-    M x = v % imod();
+  constexpr static_modint(T a) {
+    M x = a % imod();
     if (x < 0) {
       x += imod();
     }
-    _v = x;
+    v = x;
   }
 
   template <internal::concepts::broadly_unsigned_integral T>
-  constexpr static_modint(T v) : _v(v % umod()) {}
+  constexpr static_modint(T a) : v(a % umod()) {}
 
-  constexpr UM val() const { return _v; }
+  constexpr UM val() const { return v; }
 
   constexpr static_modint operator+() const { return *this; }
   constexpr static_modint operator-() const {
-    return raw(_v == 0 ? 0 : imod() - _v);
+    return raw(v == 0 ? 0 : imod() - v);
   }
 
   constexpr static_modint &operator++() {
-    ++_v;
-    if (_v == umod()) {
-      _v = 0;
+    ++v;
+    if (v == umod()) {
+      v = 0;
     }
     return *this;
   }
   constexpr static_modint &operator--() {
-    if (_v == 0) {
-      _v = umod();
+    if (v == 0) {
+      v = umod();
     }
-    --_v;
+    --v;
     return *this;
   }
   constexpr static_modint operator++(int) {
@@ -91,21 +91,21 @@ public:
   }
 
   constexpr static_modint &operator+=(const static_modint &o) {
-    _v += o._v;
-    if (_v >= umod()) {
-      _v -= umod();
+    v += o.v;
+    if (v >= umod()) {
+      v -= umod();
     }
     return *this;
   }
   constexpr static_modint &operator-=(const static_modint &o) {
-    if (_v < o._v) {
-      _v += umod();
+    if (v < o.v) {
+      v += umod();
     }
-    _v -= o._v;
+    v -= o.v;
     return *this;
   }
   constexpr static_modint &operator*=(const static_modint &o) {
-    _v = (BM)_v * o._v % umod();
+    v = (BM)v * o.v % umod();
     return *this;
   }
   constexpr static_modint &operator/=(const static_modint &o) {
@@ -128,7 +128,7 @@ public:
     if constexpr (is_prime_mod) {
       return pow(imod() - 2);
     } else {
-      return raw(inv_gcd((M)_v, imod()));
+      return raw(inv_gcd((M)v, imod()));
     }
   }
 
@@ -153,7 +153,7 @@ public:
     return res /= r;
   }
 
-  constexpr bool operator==(const static_modint &o) const { return _v == o._v; }
+  constexpr bool operator==(const static_modint &o) const { return v == o.v; }
   constexpr bool operator!=(const static_modint &o) const {
     return !(*this == o);
   }
@@ -165,11 +165,11 @@ public:
     return is;
   }
   friend constexpr ostream &operator<<(ostream &os, const static_modint &o) {
-    return os << o._v;
+    return os << o.v;
   }
 
 private:
-  UM _v;
+  UM v;
 };
 
 template <int id = -1> struct dynamic_modint : internal::modint::modint_base {
@@ -181,44 +181,44 @@ public:
   static constexpr int imod() { return bt.umod(); }
   static constexpr unsigned int umod() { return bt.umod(); }
 
-  static constexpr dynamic_modint raw(int v) {
+  static constexpr dynamic_modint raw(int a) {
     dynamic_modint res;
-    res._v = v;
+    res.v = a;
     return res;
   }
 
-  constexpr dynamic_modint() : _v(0) {}
+  constexpr dynamic_modint() : v(0) {}
 
   template <internal::concepts::broadly_signed_integral T>
-  constexpr dynamic_modint(T v) {
-    long long x = v % imod();
+  constexpr dynamic_modint(T a) {
+    long long x = a % imod();
     if (x < 0) {
       x += imod();
     }
-    _v = x;
+    v = x;
   }
 
   template <internal::concepts::broadly_unsigned_integral T>
-  constexpr dynamic_modint(T v) : _v(v % umod()) {}
+  constexpr dynamic_modint(T a) : v(a % umod()) {}
 
-  constexpr unsigned int val() const { return _v; }
+  constexpr unsigned int val() const { return v; }
   constexpr dynamic_modint operator+() const { return *this; }
   constexpr dynamic_modint operator-() const {
-    return raw(_v == 0 ? 0 : imod() - _v);
+    return raw(v == 0 ? 0 : imod() - v);
   }
 
   constexpr dynamic_modint &operator++() {
-    ++_v;
-    if (_v == umod()) {
-      _v = 0;
+    ++v;
+    if (v == umod()) {
+      v = 0;
     }
     return *this;
   }
   constexpr dynamic_modint &operator--() {
-    if (_v == 0) {
-      _v = umod();
+    if (v == 0) {
+      v = umod();
     }
-    --_v;
+    --v;
     return *this;
   }
   constexpr dynamic_modint operator++(int) {
@@ -233,21 +233,21 @@ public:
   }
 
   constexpr dynamic_modint &operator+=(const dynamic_modint &o) {
-    _v += o._v;
-    if (_v >= umod()) {
-      _v -= umod();
+    v += o.v;
+    if (v >= umod()) {
+      v -= umod();
     }
     return *this;
   }
   constexpr dynamic_modint &operator-=(const dynamic_modint &o) {
-    if (_v < o._v) {
-      _v += umod();
+    if (v < o.v) {
+      v += umod();
     }
-    _v -= o._v;
+    v -= o.v;
     return *this;
   }
   constexpr dynamic_modint &operator*=(const dynamic_modint &o) {
-    _v = bt.mul(_v, o._v);
+    v = bt.mul(v, o.v);
     //_v = (long long)_v * o._v % umod();
     return *this;
   }
@@ -267,7 +267,7 @@ public:
     }
     return res;
   }
-  constexpr dynamic_modint inv() const { return raw(inv_gcd((int)_v, imod())); }
+  constexpr dynamic_modint inv() const { return raw(inv_gcd((int)v, imod())); }
 
   friend constexpr dynamic_modint operator+(const dynamic_modint &l,
                                             const dynamic_modint &r) {
@@ -290,9 +290,7 @@ public:
     return res /= r;
   }
 
-  constexpr bool operator==(const dynamic_modint &o) const {
-    return _v == o._v;
-  }
+  constexpr bool operator==(const dynamic_modint &o) const { return v == o.v; }
   constexpr bool operator!=(const dynamic_modint &o) const {
     return !(*this == o);
   }
@@ -304,11 +302,11 @@ public:
     return is;
   }
   friend constexpr ostream &operator<<(ostream &os, const dynamic_modint &o) {
-    return os << o._v;
+    return os << o.v;
   }
 
 private:
-  unsigned int _v;
+  unsigned int v;
   static internal::math::barrett bt;
 };
 template <int id> internal::math::barrett dynamic_modint<id>::bt(998244353);

@@ -586,47 +586,47 @@ constexpr bool is_valid_setting_v = is_valid_setting<T, poly_setting>::value;
 template <typename T, PolySetting poly_setting,
           enable_if_t<is_valid_setting_v<T, poly_setting>, nullptr_t> = nullptr>
 struct Poly {
-  constexpr Poly() : _v(1, 0) {}
-  constexpr Poly(int n) : _v(n) {}
-  constexpr Poly(vector<T> v) : _v(v) {}
+  constexpr Poly() : v(1, 0) {}
+  constexpr Poly(int n) : v(n) {}
+  constexpr Poly(vector<T> v) : v(v) {}
 
-  constexpr int degree() const { return _v.size() - 1; }
-  constexpr T operator[](int i) const { return _v[i]; }
-  constexpr T &operator[](int i) { return _v[i]; }
+  constexpr int degree() const { return v.size() - 1; }
+  constexpr T operator[](int i) const { return v[i]; }
+  constexpr T &operator[](int i) { return v[i]; }
 
   constexpr Poly &operator*=(const Poly &o) {
     if constexpr (poly_setting == PolySetting::ntt) {
       if constexpr (ModInt<T>) {
         int z = bit_ceil((unsigned int)(degree() + o.degree() + 1));
         if (StaticModInt<T> && T::is_prime_mod && (T::imod() - 1) % z == 0) {
-          _v = internal::poly::ntt::convolution(_v, o._v);
+          v = internal::poly::ntt::convolution(v, o.v);
         } else {
-          _v = internal::poly::ntt::convolution_arb_mod(_v, o._v);
+          v = internal::poly::ntt::convolution_arb_mod(v, o.v);
         }
       } else { // integral
         vector<long long> a(degree() + 1), b(o.degree() + 1);
         for (int i = 0; i <= degree(); i++) {
-          a[i] = _v[i];
+          a[i] = v[i];
         }
         for (int i = 0; i <= o.degree(); i++) {
-          b[i] = o._v[i];
+          b[i] = o.v[i];
         }
         vector<long long> res = internal::poly::ntt::convolution_ll(a, b);
-        _v.resize(res.size());
+        v.resize(res.size());
         for (size_t i = 0; i < res.size(); i++) {
-          _v[i] = res[i];
+          v[i] = res[i];
         }
       }
     } else if constexpr (poly_setting == PolySetting::fft_sqrt) {
       if constexpr (ModInt<T>) {
-        _v = internal::poly::fft::convolution_arb_mod(_v, o._v);
+        v = internal::poly::fft::convolution_arb_mod(v, o.v);
       } else { // integral
-        _v = internal::poly::fft::convolution_sqrt(_v, o._v);
+        v = internal::poly::fft::convolution_sqrt(v, o.v);
       }
     } else if constexpr (poly_setting == PolySetting::fft) {
-      _v = internal::poly::fft::convolution(_v, o._v);
+      v = internal::poly::fft::convolution(v, o.v);
     } else if constexpr (poly_setting == PolySetting::fft_complex) {
-      _v = internal::poly::fft::convolution_complex(_v, o._v);
+      v = internal::poly::fft::convolution_complex(v, o.v);
     }
     return *this;
   }
@@ -636,6 +636,6 @@ struct Poly {
   }
 
 private:
-  vector<T> _v;
+  vector<T> v;
 };
 } // namespace maomao90

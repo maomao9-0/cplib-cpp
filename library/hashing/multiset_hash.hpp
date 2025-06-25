@@ -15,7 +15,7 @@ struct MultisetHash {
   constexpr array<typename mint::umod_type, num_bases> get_v() const {
     array<typename mint::umod_type, num_bases> res;
     for (int i = 0; i < num_bases; i++) {
-      res[i] = _v[i].val();
+      res[i] = v[i].val();
     }
     return res;
   }
@@ -23,7 +23,7 @@ struct MultisetHash {
   constexpr MultisetHash insert(long long a, long long cnt = 1) const {
     MultisetHash res = *this;
     for (int i = 0; i < num_bases; i++) {
-      res._v[i] += get_pow(i, a) * cnt;
+      res.v[i] += get_pow(i, a) * cnt;
     }
     return res;
   }
@@ -31,7 +31,7 @@ struct MultisetHash {
   constexpr MultisetHash erase(long long a, long long cnt = 1) const {
     MultisetHash res = *this;
     for (int i = 0; i < num_bases; i++) {
-      res._v[i] -= get_pow(i, a) * cnt;
+      res.v[i] -= get_pow(i, a) * cnt;
     }
     return res;
   }
@@ -40,7 +40,7 @@ struct MultisetHash {
   constexpr MultisetHash offset(long long delta) const {
     MultisetHash res = *this;
     for (int i = 0; i < num_bases; i++) {
-      res._v[i] *= get_pow(i, delta);
+      res.v[i] *= get_pow(i, delta);
     }
     return res;
   }
@@ -50,7 +50,7 @@ struct MultisetHash {
   }
   constexpr MultisetHash &operator+=(const MultisetHash &o) {
     for (int i = 0; i < num_bases; i++) {
-      _v[i] += o._v[i];
+      v[i] += o.v[i];
     }
     return *this;
   }
@@ -60,13 +60,13 @@ struct MultisetHash {
   }
   constexpr MultisetHash &operator-=(const MultisetHash &o) {
     for (int i = 0; i < num_bases; i++) {
-      _v[i] -= o._v[i];
+      v[i] -= o.v[i];
     }
     return *this;
   }
   constexpr bool operator==(const MultisetHash &o) const {
     for (int i = 0; i < num_bases; i++) {
-      if (_v[i] != o._v[i]) {
+      if (v[i] != o.v[i]) {
         return false;
       }
     }
@@ -77,7 +77,7 @@ struct MultisetHash {
   }
 
 private:
-  array<mint, num_bases> _v;
+  array<mint, num_bases> v;
   inline static const array<mint, num_bases>
       bases = internal::hashing::gen_bases<mint, num_bases>(),
       inv_bases = internal::hashing::gen_inverse<mint, num_bases>(bases);
