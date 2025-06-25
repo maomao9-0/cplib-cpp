@@ -559,6 +559,7 @@ enum PolySetting {
   fft_sqrt, // uses sqrt to increase precision
   fft_complex,
 };
+namespace internal::type_traits {
 template <typename T, PolySetting poly_setting>
 struct is_valid_setting : false_type {};
 // ntt allowes ModInt or integral types
@@ -582,9 +583,12 @@ struct is_valid_setting<complex<T>, PolySetting::fft_complex> : true_type {};
 
 template <typename T, PolySetting poly_setting>
 constexpr bool is_valid_setting_v = is_valid_setting<T, poly_setting>::value;
+} // namespace internal::type_traits
 
-template <typename T, PolySetting poly_setting,
-          enable_if_t<is_valid_setting_v<T, poly_setting>, nullptr_t> = nullptr>
+template <
+    typename T, PolySetting poly_setting,
+    enable_if_t<internal::type_traits::is_valid_setting_v<T, poly_setting>,
+                nullptr_t> = nullptr>
 struct Poly {
   constexpr Poly() : v(1, 0) {}
   constexpr Poly(int n) : v(n) {}
