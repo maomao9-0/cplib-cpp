@@ -40,13 +40,13 @@ template <
 - `static_modint();`	 
   Initialise modint with value $0$.
   
-- `static_modint(T v);`  
-  Initialise modint with value `v`.
+- `static_modint(T a);`  
+  Initialise modint with value `a`.
 
 ### Member functions
 
-- `static static_modint raw(mod_type v);`  
-  Constant time optimisation to create `static_modint` if $0\le \texttt{v} < \texttt{mod}$.
+- `static static_modint raw(mod_type a);`  
+  Constant time optimisation to create `static_modint` if $0\le \texttt{a} < \texttt{mod}$.
 
 - `static constexpr mod_type imod();`  
   Returns the signed value of `mod`.
@@ -107,8 +107,8 @@ template <
 - `dynamic_modint();`	 
   Initialise modint with value $0$.
   
-- `dynamic_modint(T v);`  
-  Initialise modint with value `v`.
+- `dynamic_modint(T a);`  
+  Initialise modint with value `a`.
 
 ### Member functions
 
@@ -121,8 +121,8 @@ template <
 - `static constexpr unsigned int umod();`  
   Returns the unsigned value of `mod`.
 
-- `static dynamic_modint raw(int v);`  
-  Constant time optimisation to create `dynamic_modint` if $0\le \texttt{v} < \texttt{mod}$.
+- `static dynamic_modint raw(int a);`  
+  Constant time optimisation to create `dynamic_modint` if $0\le \texttt{a} < \texttt{mod}$.
 
 - `unsigned int val() const;`  
   Return value stored in `dynamic_modint`.
