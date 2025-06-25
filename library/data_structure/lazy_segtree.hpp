@@ -15,17 +15,17 @@ template <internal::concepts::Monoid T, internal::concepts::Lazy<T> L>
 struct LazySegTree {
   LazySegTree() : LazySegTree(0) {}
   explicit LazySegTree(int n) : LazySegTree(vector<T>(n, T::id())) {}
-  explicit LazySegTree(const vector<T> &_v) : _n(int(_v.size())) {
+  explicit LazySegTree(const vector<T> &a) : n(int(a.size())) {
     size = 1;
     log = 0;
-    while (size < _n) {
+    while (size < n) {
       size <<= 1;
       log++;
     }
     v = vector<T>(2 * size, T::id());
     lz = vector<L>(size, L::id());
-    for (int i = 0; i < _n; i++) {
-      v[size + i] = _v[i];
+    for (int i = 0; i < n; i++) {
+      v[size + i] = a[i];
     }
     for (int i = size - 1; i >= 1; i--) {
       update(i);
@@ -33,7 +33,7 @@ struct LazySegTree {
   }
 
   void set(int p, T x) {
-    assert(0 <= p && p < _n);
+    assert(0 <= p && p < n);
     p += size;
     for (int i = log; i >= 1; i--) {
       push(p >> i);
@@ -45,7 +45,7 @@ struct LazySegTree {
   }
 
   T get(int p) {
-    assert(0 <= p && p < _n);
+    assert(0 <= p && p < n);
     p += size;
     T res = v[p];
     for (int i = 1; i <= log; i++) {
@@ -59,7 +59,7 @@ struct LazySegTree {
     if (l > r) {
       return T::id();
     }
-    assert(0 <= l && r < _n);
+    assert(0 <= l && r < n);
     r++;
 
     l += size;
@@ -96,7 +96,7 @@ struct LazySegTree {
   T all_qry() { return v[1]; }
 
   void upd(int p, L f) {
-    assert(0 <= p && p < _n);
+    assert(0 <= p && p < n);
     p += size;
     for (int i = log; i >= 1; i--) {
       push(p >> i);
@@ -112,7 +112,7 @@ struct LazySegTree {
     if (l > r) {
       return;
     }
-    assert(0 <= l && r < _n);
+    assert(0 <= l && r < n);
     r++;
 
     l += size;
@@ -159,10 +159,10 @@ struct LazySegTree {
 
   // returns largest x such that pred(qry(l, x)) is true
   template <class P> int max_right(int l, P pred) {
-    assert(0 <= l && l <= _n);
+    assert(0 <= l && l <= n);
     assert(pred(T::id()));
-    if (l == _n) {
-      return _n - 1;
+    if (l == n) {
+      return n - 1;
     }
     l += size;
     for (int i = log; i >= 1; i--) {
@@ -187,7 +187,7 @@ struct LazySegTree {
       sm = sm.merge(v[l]);
       l++;
     } while ((l & -l) != l);
-    return _n - 1;
+    return n - 1;
   }
 
   template <bool (*pred)(T)> int min_left(int r) {
@@ -195,7 +195,7 @@ struct LazySegTree {
   }
   // returns smallest x such that pred(qry(x, l)) is true
   template <class P> int min_left(int r, P pred) {
-    assert(-1 <= r && r < _n);
+    assert(-1 <= r && r < n);
     if (r == -1) {
       return 0;
     }
@@ -228,7 +228,7 @@ struct LazySegTree {
   }
 
 private:
-  int _n, size, log;
+  int n, size, log;
   vector<T> v;
   vector<L> lz;
 
