@@ -5,6 +5,8 @@
 
 #include "library/internal/concepts.hpp"
 
+// Modified from https://judge.yosupo.jp/submission/268423
+
 namespace maomao90 {
 using namespace std;
 
@@ -43,13 +45,12 @@ template <internal::concepts::Monoid T> struct SegTree {
     return v[p + size];
   }
 
-  // query [l, r] inclusive of both endpoints
+  // query [l, r) inclusive of left endpoint, exclusive of right endpoint
   T qry(int l, int r) {
-    if (l > r) {
+    if (l >= r) {
       return T::id();
     }
-    assert(0 <= l && r < n);
-    r++;
+    assert(0 <= l && r <= n);
 
     l += size;
     r += size;
@@ -73,12 +74,13 @@ template <internal::concepts::Monoid T> struct SegTree {
     return max_right(l, [](T x) { return pred(x); });
   }
 
-  // returns largest x such that pred(qry(l, x)) is true
+  // returns largest x such that pred(qry(l, x)) is true (note that right
+  // endpoint `x` is exclusive)
   template <class P> int max_right(int l, P pred) {
     assert(0 <= l && l <= n);
     assert(pred(T::id()));
     if (l == n) {
-      return n - 1;
+      return n;
     }
     l += size;
     T sm = T::id();
@@ -94,24 +96,24 @@ template <internal::concepts::Monoid T> struct SegTree {
             l++;
           }
         }
-        return l - 1 - size;
+        return l - size;
       }
       sm = sm.merge(v[l]);
       l++;
     } while ((l & -l) != l);
-    return n - 1;
+    return n;
   }
 
   template <bool (*pred)(T)> int min_left(int r) {
     return min_left(r, [](T x) { return pred(x); });
   }
-  // returns smallest x such that pred(qry(x, r)) is true
+  // returns smallest x such that pred(qry(x, r)) is true (note that right
+  // endpoint `r` is exlusive)
   template <class P> int min_left(int r, P pred) {
-    assert(-1 <= r && r < n);
-    if (r == -1) {
+    assert(-1 <= r && r <= n);
+    if (r == 0) {
       return 0;
     }
-    r++;
     assert(pred(T::id()));
     r += size;
     T sm = T::id();
