@@ -39,7 +39,6 @@ int main() {
     if (t == 0) {
       int l, r, b, c;
       cin >> l >> r >> b >> c;
-      r--;
       seg.upd(l, r, {b, c});
     } else {
       int i;

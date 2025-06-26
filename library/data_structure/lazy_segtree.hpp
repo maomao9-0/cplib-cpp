@@ -56,13 +56,12 @@ struct LazySegTree {
     return res;
   }
 
-  // query [l, r] inclusive of both endpoints
+  // query [l, r) inclusive of left endpoint, exclusive of right endpoint
   T qry(int l, int r) {
     if (l > r) {
       return T::id();
     }
     assert(0 <= l && r < n);
-    r++;
 
     l += size;
     r += size;
@@ -109,13 +108,12 @@ struct LazySegTree {
     }
   }
 
-  // update [l, r] inclusive of both endpoints
+  // update [l, r) inclusive of left endpoint, exclusive of right endpoint
   void upd(int l, int r, L f) {
     if (l > r) {
       return;
     }
     assert(0 <= l && r < n);
-    r++;
 
     l += size;
     r += size;
@@ -159,7 +157,8 @@ struct LazySegTree {
     return max_right(l, [](T x) { return pred(x); });
   }
 
-  // returns largest x such that pred(qry(l, x - 1)) is true
+  // returns largest x such that pred(qry(l, x)) is true (note that right
+  // endpoint `x` is exclusive)
   template <class P> int max_right(int l, P pred) {
     assert(0 <= l && l <= n);
     assert(pred(T::id()));
@@ -195,7 +194,8 @@ struct LazySegTree {
   template <bool (*pred)(T)> int min_left(int r) {
     return min_left(r, [](T x) { return pred(x); });
   }
-  // returns smallest x such that pred(qry(x, r - 1)) is true
+  // returns smallest x such that pred(qry(x, r)) is true (note that right
+  // endpoint `r` is exlusive)
   template <class P> int min_left(int r, P pred) {
     assert(0 <= r && r <= n);
     if (r == 0) {
