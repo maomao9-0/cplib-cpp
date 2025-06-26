@@ -193,13 +193,12 @@ struct LazySegTree {
   template <bool (*pred)(T)> int min_left(int r) {
     return min_left(r, [](T x) { return pred(x); });
   }
-  // returns smallest x such that pred(qry(x, l)) is true
+  // returns smallest x such that pred(qry(x, r - 1)) is true
   template <class P> int min_left(int r, P pred) {
-    assert(-1 <= r && r < n);
-    if (r == -1) {
+    assert(0 <= r && r <= n);
+    if (r == 0) {
       return 0;
     }
-    r++;
     assert(pred(T::id()));
     r += size;
     for (int i = log; i >= 1; i--) {
