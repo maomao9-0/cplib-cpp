@@ -159,12 +159,12 @@ struct LazySegTree {
     return max_right(l, [](T x) { return pred(x); });
   }
 
-  // returns largest x such that pred(qry(l, x)) is true
+  // returns largest x such that pred(qry(l, x - 1)) is true
   template <class P> int max_right(int l, P pred) {
     assert(0 <= l && l <= n);
     assert(pred(T::id()));
     if (l == n) {
-      return n - 1;
+      return n;
     }
     l += size;
     for (int i = log; i >= 1; i--) {
@@ -184,12 +184,12 @@ struct LazySegTree {
             l++;
           }
         }
-        return l - 1 - size;
+        return l - size;
       }
       sm = sm.merge(v[l]);
       l++;
     } while ((l & -l) != l);
-    return n - 1;
+    return n;
   }
 
   template <bool (*pred)(T)> int min_left(int r) {
