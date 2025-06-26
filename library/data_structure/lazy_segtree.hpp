@@ -58,10 +58,10 @@ struct LazySegTree {
 
   // query [l, r) inclusive of left endpoint, exclusive of right endpoint
   T qry(int l, int r) {
-    if (l > r) {
+    if (l >= r) {
       return T::id();
     }
-    assert(0 <= l && r < n);
+    assert(0 <= l && r <= n);
 
     l += size;
     r += size;
@@ -110,10 +110,10 @@ struct LazySegTree {
 
   // update [l, r) inclusive of left endpoint, exclusive of right endpoint
   void upd(int l, int r, L f) {
-    if (l > r) {
+    if (l >= r) {
       return;
     }
-    assert(0 <= l && r < n);
+    assert(0 <= l && r <= n);
 
     l += size;
     r += size;
