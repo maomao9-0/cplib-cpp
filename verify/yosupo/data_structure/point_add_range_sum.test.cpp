@@ -30,7 +30,7 @@ int main() {
     } else {
       int l, r;
       cin >> l >> r;
-      cout << seg.qry(l, r).v << '\n';
+      cout << seg.query(l, r).v << '\n';
     }
   }
   return 0;

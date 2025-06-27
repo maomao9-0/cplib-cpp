@@ -39,7 +39,7 @@ int main() {
     if (t == 0) {
       int l, r, b, c;
       cin >> l >> r >> b >> c;
-      seg.upd(l, r, {b, c});
+      seg.update(l, r, {b, c});
     } else {
       int i;
       cin >> i;

@@ -37,7 +37,7 @@ int main() {
     } else {
       int l, r, x;
       cin >> l >> r >> x;
-      cout << seg.qry(l, r).eval(x) << '\n';
+      cout << seg.query(l, r).eval(x) << '\n';
     }
   }
   return 0;

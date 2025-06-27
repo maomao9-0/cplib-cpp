@@ -46,7 +46,7 @@ template <internal::concepts::Monoid T> struct SegTree {
   }
 
   // query [l, r) inclusive of left endpoint, exclusive of right endpoint
-  T qry(int l, int r) {
+  T query(int l, int r) {
     if (l >= r) {
       return T::id();
     }
@@ -68,13 +68,13 @@ template <internal::concepts::Monoid T> struct SegTree {
     return sml.merge(smr);
   }
 
-  T all_qry() { return v[1]; }
+  T all_query() { return v[1]; }
 
   template <bool (*pred)(T)> int max_right(int l) {
     return max_right(l, [](T x) { return pred(x); });
   }
 
-  // returns largest x such that pred(qry(l, x)) is true (note that right
+  // returns largest x such that pred(query(l, x)) is true (note that right
   // endpoint `x` is exclusive)
   template <class P> int max_right(int l, P pred) {
     assert(0 <= l && l <= n);
@@ -107,7 +107,7 @@ template <internal::concepts::Monoid T> struct SegTree {
   template <bool (*pred)(T)> int min_left(int r) {
     return min_left(r, [](T x) { return pred(x); });
   }
-  // returns smallest x such that pred(qry(x, r)) is true (note that right
+  // returns smallest x such that pred(query(x, r)) is true (note that right
   // endpoint `r` is exlusive)
   template <class P> int min_left(int r, P pred) {
     assert(-1 <= r && r <= n);

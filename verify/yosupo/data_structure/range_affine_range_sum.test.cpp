@@ -39,11 +39,11 @@ int main() {
     if (t == 0) {
       int l, r, b, c;
       cin >> l >> r >> b >> c;
-      seg.upd(l, r, {b, c});
+      seg.update(l, r, {b, c});
     } else {
       int l, r;
       cin >> l >> r;
-      cout << seg.qry(l, r).sm << '\n';
+      cout << seg.query(l, r).sm << '\n';
     }
   }
   return 0;

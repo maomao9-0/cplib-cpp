@@ -57,7 +57,7 @@ struct LazySegTree {
   }
 
   // query [l, r) inclusive of left endpoint, exclusive of right endpoint
-  T qry(int l, int r) {
+  T query(int l, int r) {
     if (l >= r) {
       return T::id();
     }
@@ -94,9 +94,9 @@ struct LazySegTree {
     return sml.merge(smr);
   }
 
-  T all_qry() { return v[1]; }
+  T all_query() { return v[1]; }
 
-  void upd(int p, L f) {
+  void update(int p, L f) {
     assert(0 <= p && p < n);
     p += size;
     for (int i = log; i >= 1; i--) {
@@ -109,7 +109,7 @@ struct LazySegTree {
   }
 
   // update [l, r) inclusive of left endpoint, exclusive of right endpoint
-  void upd(int l, int r, L f) {
+  void update(int l, int r, L f) {
     if (l >= r) {
       return;
     }
@@ -157,7 +157,7 @@ struct LazySegTree {
     return max_right(l, [](T x) { return pred(x); });
   }
 
-  // returns largest x such that pred(qry(l, x)) is true (note that right
+  // returns largest x such that pred(query(l, x)) is true (note that right
   // endpoint `x` is exclusive)
   template <class P> int max_right(int l, P pred) {
     assert(0 <= l && l <= n);
@@ -194,7 +194,7 @@ struct LazySegTree {
   template <bool (*pred)(T)> int min_left(int r) {
     return min_left(r, [](T x) { return pred(x); });
   }
-  // returns smallest x such that pred(qry(x, r)) is true (note that right
+  // returns smallest x such that pred(query(x, r)) is true (note that right
   // endpoint `r` is exlusive)
   template <class P> int min_left(int r, P pred) {
     assert(0 <= r && r <= n);
