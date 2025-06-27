@@ -36,7 +36,7 @@ struct Node<T, L, true> {
 };
 } // namespace internal::splaytree
 
-/// A balanced binary search tree
+/// A balanced binary search tree.
 ///
 /// Supports operations similar to a LazySegTree. Additionally, also supports
 /// splitting, merging, and range reversals. All operations work in ammortised
@@ -44,11 +44,11 @@ struct Node<T, L, true> {
 /// intervals are half-open: [start, end).
 ///
 /// @tparam T the monoid to be stored in the treap. Note that the `merge`
-///     function is called using `left_monoid.merge(right_monoid)`
+///     function is called using `left_monoid.merge(right_monoid)`.
 /// @tparam L the type used to perform range updates on `T`. Note that the
-///     `merge` function is called using `new_update.merge(old_update)`
+///     `merge` function is called using `new_update.merge(old_update)`.
 /// @tparam store_reverse should be `true` only if range reversal is required
-///     and `T` is not commutative
+///     and `T` is not commutative.
 template <internal::concepts::Monoid T, internal::concepts::Lazy<T> L,
           bool store_reverse = false>
 struct SplayTree {
@@ -271,34 +271,34 @@ public:
   /// Initialises the splay tree with `n` elements, all equal to the identity
   /// element `T::id()`.
   ///
-  /// @param n the number of elements to be initialised with
+  /// @param n the number of elements to be initialised with.
   explicit SplayTree(int n) : SplayTree(vector<T>(n, T::id())) {}
   /// Initialises the splay tree with values from vector `v`.
   ///
-  /// @param v the vector of values to be stored in the splay tree
+  /// @param v the vector of values to be stored in the splay tree.
   explicit SplayTree(const vector<T> &v) : root(nullptr) {
     if (!v.empty()) {
       root = build(v, 0, v.size());
     }
   }
-  /// @returns the number of vertices in the splay tree
+  /// @returns the number of vertices in the splay tree.
   int size() { return size(root); }
   /// Set the `k`-th index (0-indexed) to `x`.
   ///
-  /// @param k the index to set
-  /// @param x the value to set
+  /// @param k the index to set.
+  /// @param x the value to set.
   ///
-  /// @pre 0 <= k < size()
+  /// @pre 0 <= k < size().
   void set(int k, T x) {
     assert(0 <= k && k < size());
     root = set_inner(root, k, x);
   }
   /// Get the value at the `k`-th index (0-indexed).
   ///
-  /// @param k the index to get the value of
-  /// @returns the value at the `k`-th index
+  /// @param k the index to get the value of.
+  /// @returns the value at the `k`-th index.
   ///
-  /// @pre 0 <= k < size()
+  /// @pre 0 <= k < size().
   T get(int k) {
     assert(0 <= k && k < size());
     T res = T::id();
@@ -307,22 +307,22 @@ public:
   }
   /// Apply update `x` to the half-open interval `[l, r)`.
   ///
-  /// @param l the **inclusive** left endpoint (0-indexed) of the interval
-  /// @param r the **exclusive** right endpoint (0-indexed) of the interval
-  /// @param x the update to be applied
+  /// @param l the **inclusive** left endpoint (0-indexed) of the interval.
+  /// @param r the **exclusive** right endpoint (0-indexed) of the interval.
+  /// @param x the update to be applied.
   ///
-  /// @pre 0 <= l <= r <= size()
+  /// @pre 0 <= l <= r <= size().
   void update(int l, int r, L x) {
     assert(0 <= l && l <= r && r <= size());
     root = update_inner(root, l, r, x);
   }
   /// Query the half-open interval `[l, r)`.
   ///
-  /// @param l the **inclusive** left endpoint (0-indexed) of the interval
-  /// @param r the **exclusive** right endpoint (0-indexed) of the interval
-  /// @returns the result of the left-associative fold in the interval
+  /// @param l the **inclusive** left endpoint (0-indexed) of the interval.
+  /// @param r the **exclusive** right endpoint (0-indexed) of the interval.
+  /// @returns the result of the left-associative fold in the interval.
   ///
-  /// @pre 0 <= l <= r <= size()
+  /// @pre 0 <= l <= r <= size().
   T query(int l, int r) {
     assert(0 <= l && l <= r && r <= size());
     T res = T::id();
@@ -331,10 +331,10 @@ public:
   }
   /// Reverses the half-open interval `[l, r)`.
   ///
-  /// @param l the **inclusive** left endpoint (0-indexed) of the interval
-  /// @param r the **exclusive** right endpoint (0-indexed) of the interval
+  /// @param l the **inclusive** left endpoint (0-indexed) of the interval.
+  /// @param r the **exclusive** right endpoint (0-indexed) of the interval.
   ///
-  /// @pre 0 <= l <= r <= size()
+  /// @pre 0 <= l <= r <= size().
   void reverse(int l, int r) {
     assert(0 <= l && l <= r && r <= size());
     root = reverse_inner(root, l, r);
@@ -344,19 +344,19 @@ public:
   /// For example, if `k = 0`, `x` is inserted at the start, and if `k =
   /// size()`, `x` is inserted at the end.
   ///
-  /// @param k the index to insert the value into
-  /// @param x the value to insert
+  /// @param k the index to insert the value into.
+  /// @param x the value to insert.
   ///
-  /// @pre 0 <= k <= size()
+  /// @pre 0 <= k <= size().
   void insert(int k, T x) {
     assert(0 <= k && k <= size());
     root = insert_inner(root, k, new node(x));
   }
   /// Erases the value at the `k`-th index (0-indexed).
   ///
-  /// @param k the index to erase
+  /// @param k the index to erase.
   ///
-  /// @pre 0 <= k < size()
+  /// @pre 0 <= k < size().
   void erase(int k) {
     assert(0 <= k && k < size());
     root = erase_inner(root, k);
@@ -365,8 +365,8 @@ public:
   /// Splits `this` into two parts. Then, set `this` to be the left part and
   /// returns the right part.
   ///
-  /// @param k the number of elements in the left part after the split
-  /// @returns the splay tree containing the remaining `size() - k` elements
+  /// @param k the number of elements in the left part after the split.
+  /// @returns the splay tree containing the remaining `size() - k` elements.
   splaytree split(int k) {
     assert(0 <= k && k <= size());
     auto [a, b] = split_inner(root, k);
@@ -376,9 +376,9 @@ public:
   /// Splits `this` into three parts. Then, set `this` to be the left part and
   /// returns the middle and right parts.
   ///
-  /// @param l the number of elements in the left part after the split
+  /// @param l the number of elements in the left part after the split.
   /// @param r the total number of elements in the left and middle part, i.e.,
-  ///     the middle part has `r - l` elements
+  ///     the middle part has `r - l` elements.
   /// @returns a pair `(middle, right)` where `middle` is the middle splay tree
   ///     containing `r - l` elements and `right` is the right splay tree
   ///     containing `size() - r` elements.
@@ -389,9 +389,9 @@ public:
   }
   /// Merge splay tree `o` to the right of `this`.
   ///
-  /// @param o the splay tree to merge to the right of `this`
+  /// @param o the splay tree to merge to the right of `this`.
   ///
-  /// @post `o` points to an empty splay tree
+  /// @post `o` points to an empty splay tree.
   void merge(splaytree &o) {
     root = merge_inner(root, o.root);
     o.root = nullptr;
@@ -400,10 +400,10 @@ public:
   /// Merge splay tree `b` to the right of `this`, then `c` to the right of
   /// `this` and `b`.
   ///
-  /// @param b`the middle splay tree after merging
-  /// @param c the right splay tree after merging
+  /// @param b`the middle splay tree after merging.
+  /// @param c the right splay tree after merging.
   ///
-  /// @post `b` and `c` points to empty splay trees
+  /// @post `b` and `c` points to empty splay trees.
   void merge(splaytree &b, splaytree &c) {
     root = merge3_inner(root, b.root, c.root);
     b.root = c.root = nullptr;
