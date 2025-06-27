@@ -65,20 +65,24 @@ template <typename T> struct SumMonoid {
   SumMonoid merge(const SumMonoid &o) const { return {v + o.v}; }
 };
 
-/// Only stores a value, and does not have a binary operation.
-///
-/// Normally used in binary search tree if the only purpose of the BST is to
-/// split and merge without requiring any range queries.
-///
-/// @tparam T the type of the value to be stored.
+/**
+ * Only stores a value, and does not have a binary operation.
+ *
+ * Normally used in binary search tree if the only purpose of the BST is to
+ * split and merge without requiring any range queries.
+ *
+ * @tparam T the type of the value to be stored.
+ */
 template <typename T> struct ValueMonoid {
   T v;
   static ValueMonoid id() { return {T()}; }
   ValueMonoid merge(const ValueMonoid &o) const { return ValueMonoid::id(); }
 };
-/// Lazy that does not apply any updates.
-///
-/// @tparam T the monoid to be used with the lazy.
+/**
+ * Lazy that does not apply any updates.
+ *
+ * @tparam T the monoid to be used with the lazy.
+ */
 template <typename T> struct NoLazy {
   static NoLazy id() { return {}; }
   NoLazy merge(const NoLazy &o) const { return {}; }
