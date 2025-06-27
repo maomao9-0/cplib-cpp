@@ -563,8 +563,11 @@ public:
    * @returns a pair `(middle, right)` where `middle` is the middle splay tree
    *     containing `r - l` elements and `right` is the right splay tree
    *     containing `size() - r` elements.
+   *
+   * @pre `0 <= l <= r <= size()`.
    */
   pair<splaytree, splaytree> split(int l, int r) {
+    assert(0 <= l && l <= r && r <= size());
     auto [a, b, c] = split3_inner(root, l, r);
     root = a;
     return {splaytree(b), splaytree(c)};
