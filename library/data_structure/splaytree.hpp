@@ -5,7 +5,8 @@
 
 #include "library/internal/concepts.hpp"
 
-// Modified from https://judge.yosupo.jp/submission/144167
+// Modified from https://judge.yosupo.jp/submission/144167 and
+// https://judge.yosupo.jp/submission/136748
 
 namespace maomao90 {
 using namespace std;
@@ -184,7 +185,7 @@ private:
   // Only can be used to merge if it was split using `split3_inner`. O(1)
   // compared to general `merge3_inner`.
   node *inv_split3_inner(node *a, node *b, node *c) {
-    node *v = merge_inner(b, c); // O(1)
+    node *v = merge_inner(b, c);
     if (!a) {
       return v;
     }
@@ -222,6 +223,96 @@ private:
     auto [a, b, c] = split3_inner(v, l, r);
     res = b->sum;
     return inv_split3_inner(a, b, c);
+  }
+  template <typename P>
+  node *max_right_inner(node *v, int l, P pred, int &res) {
+    res = l;
+    if (l == size(v)) {
+      return v;
+    }
+    v = splay_top_down(v, l);
+    if (!pred(v->val)) {
+      return v;
+    }
+    res++;
+    push_down(v);
+    v->r = max_right_inner(v->r, v->val, pred, res);
+    if (v->r) {
+      v = rotate_left(v);
+    }
+    update(v);
+    return v;
+  }
+  template <typename P>
+  node *max_right_inner(node *v, T sum, P pred, int &res) {
+    if (!v) {
+      return v;
+    }
+    push_down(v);
+    T lsum = sum;
+    if (v->l) {
+      lsum = lsum.merge(v->l->sum);
+    }
+    lsum = lsum.merge(v->val);
+    if (pred(lsum)) {
+      int szl = v->l ? v->l->sz : 0;
+      res += szl + 1;
+      v->r = max_right_inner(v->r, lsum, pred, res);
+      if (v->r) {
+        v = rotate_left(v);
+      }
+    } else {
+      v->l = max_right_inner(v->l, sum, pred, res);
+      if (v->l) {
+        v = rotate_right(v);
+      }
+    }
+    update(v);
+    return v;
+  }
+  template <typename P> node *min_left_inner(node *v, int r, P pred, int &res) {
+    res = r;
+    if (r == 0) {
+      return v;
+    }
+    v = splay_top_down(v, r - 1);
+    if (!pred(v->val)) {
+      return v;
+    }
+    res--;
+    push_down(v);
+    v->l = min_left_inner(v->l, v->val, pred, res);
+    if (v->l) {
+      v = rotate_right(v);
+    }
+    update(v);
+    return v;
+  }
+  template <typename P> node *min_left_inner(node *v, T sum, P pred, int &res) {
+    if (!v) {
+      return v;
+    }
+    push_down(v);
+    T rsum = sum;
+    if (v->r) {
+      rsum = v->r->sum.merge(rsum);
+    }
+    rsum = v->val.merge(rsum);
+    if (pred(rsum)) {
+      int szr = v->r ? v->r->sz : 0;
+      res -= szr + 1;
+      v->l = min_left_inner(v->l, rsum, pred, res);
+      if (v->l) {
+        v = rotate_right(v);
+      }
+    } else {
+      v->r = min_left_inner(v->r, sum, pred, res);
+      if (v->r) {
+        v = rotate_left(v);
+      }
+    }
+    update(v);
+    return v;
   }
   node *reverse_inner(node *v, int l, int r) {
     if (r == l) {
@@ -291,8 +382,11 @@ public:
       root = build(v, 0, v.size());
     }
   }
+
   /**
-   * @returns the number of vertices in the splay tree.
+   * Gets the number of elements in the splay tree.
+   *
+   * @returns the number of elements in the splay tree.
    */
   int size() { return size(root); }
   /**
@@ -301,7 +395,7 @@ public:
    * @param k the index to set.
    * @param x the value to set.
    *
-   * @pre 0 <= k < size().
+   * @pre `0 <= k < size()`.
    */
   void set(int k, T x) {
     assert(0 <= k && k < size());
@@ -313,7 +407,7 @@ public:
    * @param k the index to get the value of.
    * @returns the value at the `k`-th index.
    *
-   * @pre 0 <= k < size().
+   * @pre `0 <= k < size()`.
    */
   T get(int k) {
     assert(0 <= k && k < size());
@@ -328,7 +422,7 @@ public:
    * @param r the **exclusive** right endpoint (0-indexed) of the interval.
    * @param x the update to be applied.
    *
-   * @pre 0 <= l <= r <= size().
+   * @pre `0 <= l <= r <= size()`.
    */
   void update(int l, int r, L x) {
     assert(0 <= l && l <= r && r <= size());
@@ -341,7 +435,7 @@ public:
    * @param r the **exclusive** right endpoint (0-indexed) of the interval.
    * @returns the result of the left-associative fold in the interval.
    *
-   * @pre 0 <= l <= r <= size().
+   * @pre `0 <= l <= r <= size()`.
    */
   T query(int l, int r) {
     assert(0 <= l && l <= r && r <= size());
@@ -349,13 +443,71 @@ public:
     root = query_inner(root, l, r, res);
     return res;
   }
+
+  /**
+   * Finds the largest `x` such that the predicate returns true for the
+   * left-associative fold on the half-open interval `[l, x)`.
+   *
+   * @tparam P the type of the predicate function.
+   * @param l the **inclusive** left endpoint (0-indexed) to search to the right
+   *     of.
+   * @param pred a function that accepts `T` as a parameter, and returns a
+   *     boolean.
+   * @returns the largest `x` such that `pred(query(l, x))` is true. Note that
+   *     the `query` function is exclusive of the right endpoint.
+   *
+   * @pre `0 <= l <= size()`.
+   * @pre `pred(T::id()) = true`. In other words, `pred` should be true for
+   *     `query(l, l)`.
+   */
+  template <typename P> int max_right(int l, P pred) {
+    assert(0 <= l && l <= size());
+    int res = l;
+    root = max_right_inner(root, l, pred, res);
+    return res;
+  }
+  /**
+   * @overload
+   */
+  template <bool (*pred)(T)> int max_right(int l) {
+    return max_right(l, [](T x) { return pred(x); });
+  }
+  /**
+   * Finds the smallest `x` such that the predicate returns true for the
+   * left-associative fold on the half-open interval `[x, r)`.
+   *
+   * @tparam P the type of the predicate function.
+   * @param r the **exclusive** right endpoint (0-indexed) to search to the left
+   *     of.
+   * @param pred a function that accepts `T` as a parameter, and returns a
+   *     boolean.
+   * @returns the smallest `x` such that `pred(query(x, r))` is true. Note that
+   *     the `query` function is exclusive of the right endpoint.
+   *
+   * @pre `0 <= r <= size()`.
+   * @pre `pred(T::id()) = true`. In other words, `pred` should be true for
+   *     `query(r, r)`.
+   */
+  template <typename P> int min_left(int r, P pred) {
+    assert(0 <= r && r <= size());
+    int res = r;
+    root = min_left_inner(root, r, pred, res);
+    return res;
+  }
+  /**
+   * @overload
+   */
+  template <bool (*pred)(T)> int min_left(int r) {
+    return min_left(r, [](T x) { return pred(x); });
+  }
+
   /**
    * Reverses the half-open interval `[l, r)`.
    *
    * @param l the **inclusive** left endpoint (0-indexed) of the interval.
    * @param r the **exclusive** right endpoint (0-indexed) of the interval.
    *
-   * @pre 0 <= l <= r <= size().
+   * @pre `0 <= l <= r <= size()`.
    */
   void reverse(int l, int r) {
     assert(0 <= l && l <= r && r <= size());
@@ -370,7 +522,7 @@ public:
    * @param k the index to insert the value into.
    * @param x the value to insert.
    *
-   * @pre 0 <= k <= size().
+   * @pre `0 <= k <= size()`.
    */
   void insert(int k, T x) {
     assert(0 <= k && k <= size());
@@ -381,7 +533,7 @@ public:
    *
    * @param k the index to erase.
    *
-   * @pre 0 <= k < size().
+   * @pre `0 <= k < size()`.
    */
   void erase(int k) {
     assert(0 <= k && k < size());
@@ -389,7 +541,7 @@ public:
   }
 
   /**
-   * Splits `this` into two parts. Then, set `this` to be the left part and
+   * Splits `this` into two parts, then, set `this` to be the left part and
    * returns the right part.
    *
    * @param k the number of elements in the left part after the split.
@@ -402,7 +554,7 @@ public:
     return splaytree(b);
   }
   /**
-   * Splits `this` into three parts. Then, set `this` to be the left part and
+   * Splits `this` into three parts, then, set `this` to be the left part and
    * returns the middle and right parts.
    *
    * @param l the number of elements in the left part after the split.
@@ -411,12 +563,16 @@ public:
    * @returns a pair `(middle, right)` where `middle` is the middle splay tree
    *     containing `r - l` elements and `right` is the right splay tree
    *     containing `size() - r` elements.
+   *
+   * @pre `0 <= l <= r <= size()`.
    */
   pair<splaytree, splaytree> split(int l, int r) {
+    assert(0 <= l && l <= r && r <= size());
     auto [a, b, c] = split3_inner(root, l, r);
     root = a;
     return {splaytree(b), splaytree(c)};
   }
+
   /**
    * Merge splay tree `o` to the right of `this`.
    *
@@ -428,7 +584,6 @@ public:
     root = merge_inner(root, o.root);
     o.root = nullptr;
   }
-
   /**
    * Merge splay tree `b` to the right of `this`, then `c` to the right of
    * `this` and `b`.
