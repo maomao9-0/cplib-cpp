@@ -27,7 +27,7 @@ concept Subtractable = requires(T a) {
 };
 template <typename T>
 concept Multipliable = requires(T a) {
-  a *a;
+  a * a;
   a *= a;
 };
 template <typename T>
