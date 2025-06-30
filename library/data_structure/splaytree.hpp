@@ -5,8 +5,9 @@
 
 #include "library/data_structure/standard_monoids.hpp"
 
-// Modified from https://judge.yosupo.jp/submission/144167 and
-// https://judge.yosupo.jp/submission/136748
+// Modified from https://judge.yosupo.jp/submission/144167,
+// https://judge.yosupo.jp/submission/136748,
+// https://judge.yosupo.jp/submission/278235
 
 namespace maomao90 {
 using namespace std;
@@ -137,11 +138,34 @@ private:
       return v;
     }
     if (k < szl) {
-      v->l = splay_top_down(v->l, k);
-      v = rotate_right(v);
+      push_down(v->l);
+      int szll = size(v->l->l);
+      if (k == szll) {
+        v = rotate_right(v);
+      } else if (k < szll) {
+        v->l->l = splay_top_down(v->l->l, k);
+        v = rotate_right(v);
+        v = rotate_right(v);
+      } else {
+        v->l->r = splay_top_down(v->l->r, k - szll - 1);
+        v->l = rotate_left(v->l);
+        v = rotate_right(v);
+      }
     } else {
-      v->r = splay_top_down(v->r, k - szl - 1);
-      v = rotate_left(v);
+      push_down(v->r);
+      k -= szl + 1;
+      int szrl = size(v->r->l);
+      if (k == szrl) {
+        v = rotate_left(v);
+      } else if (k < szrl) {
+        v->r->l = splay_top_down(v->r->l, k);
+        v->r = rotate_right(v->r);
+        v = rotate_left(v);
+      } else {
+        v->r->r = splay_top_down(v->r->r, k - szrl - 1);
+        v = rotate_left(v);
+        v = rotate_left(v);
+      }
     }
     update(v);
     return v;
