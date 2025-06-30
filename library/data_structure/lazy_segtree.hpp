@@ -3,7 +3,7 @@
 #include <cassert>
 #include <vector>
 
-#include "library/internal/concepts.hpp"
+#include "library/data_structure/standard_monoids.hpp"
 
 // Modified from https://judge.yosupo.jp/submission/242469
 
@@ -13,8 +13,7 @@ using namespace std;
 // 0-indexed
 // left_monoid.merge(right_monoid)
 // new_update.merge(old_update)
-template <internal::concepts::Monoid T, internal::concepts::Lazy<T> L>
-struct LazySegTree {
+template <Monoid T, Lazy<T> L> struct LazySegTree {
   LazySegTree() : LazySegTree(0) {}
   explicit LazySegTree(int n) : LazySegTree(vector<T>(n, T::id())) {}
   explicit LazySegTree(const vector<T> &a) : n(int(a.size())) {

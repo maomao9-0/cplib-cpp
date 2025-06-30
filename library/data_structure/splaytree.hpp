@@ -3,7 +3,7 @@
 #include <cassert>
 #include <vector>
 
-#include "library/internal/concepts.hpp"
+#include "library/data_structure/standard_monoids.hpp"
 
 // Modified from https://judge.yosupo.jp/submission/144167 and
 // https://judge.yosupo.jp/submission/136748
@@ -12,9 +12,7 @@ namespace maomao90 {
 using namespace std;
 
 namespace internal::splaytree {
-template <internal::concepts::Monoid T, internal::concepts::Lazy<T> L,
-          bool store_reverse>
-struct Node {
+template <Monoid T, Lazy<T> L, bool store_reverse> struct Node {
   Node *l, *r;
   int sz;
   bool rev;
@@ -25,8 +23,7 @@ struct Node {
         lz(L::id()) {}
 };
 
-template <internal::concepts::Monoid T, internal::concepts::Lazy<T> L>
-struct Node<T, L, true> {
+template <Monoid T, Lazy<T> L> struct Node<T, L, true> {
   Node *l, *r;
   int sz;
   bool rev;
@@ -53,9 +50,7 @@ struct Node<T, L, true> {
  * @tparam store_reverse should be `true` only if range reversal is required
  *     and `T` is not commutative.
  */
-template <internal::concepts::Monoid T, internal::concepts::Lazy<T> L,
-          bool store_reverse = false>
-struct SplayTree {
+template <Monoid T, Lazy<T> L, bool store_reverse = false> struct SplayTree {
 private:
   using splaytree = SplayTree<T, L, store_reverse>;
   using node = internal::splaytree::Node<T, L, store_reverse>;
