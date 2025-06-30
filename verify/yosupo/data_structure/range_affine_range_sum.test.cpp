@@ -14,14 +14,14 @@ struct Node {
   Node merge(const Node &o) const { return {sm + o.sm}; }
 };
 
-struct Lazy {
+struct Upd {
   mint m, c;
-  static Lazy id() { return {1, 0}; }
-  Lazy merge(const Lazy &o) const { return {m * o.m, m * o.c + c}; }
+  static Upd id() { return {1, 0}; }
+  Upd merge(const Upd &o) const { return {m * o.m, m * o.c + c}; }
   Node apply(const Node &o, int len) const { return {o.sm * m + c * len}; }
 };
 
-using ST = LazySegTree<Node, Lazy>;
+using ST = LazySegTree<Node, Upd>;
 
 int n, q;
 
