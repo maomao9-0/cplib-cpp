@@ -8,8 +8,6 @@
 namespace maomao90 {
 using namespace std;
 
-// 1-indexed
-// parent_path.merge(child_path)
 /**
  * A static top tree supporting updates and queries on a tree.
  *

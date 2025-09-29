@@ -8,9 +8,6 @@
 namespace maomao90 {
 using namespace std;
 
-// 1-indexed
-// new_lazy.merge(old_lazy)
-// parent_path.merge(child_path)
 template <typename Path, typename Point, typename Lazy, typename T = int>
   requires internal::concepts::StaticTopTreePathPoint<Path, Point, T> &&
            internal::concepts::StaticTopTreeLazy<Lazy, Path, Point, T>
