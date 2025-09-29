@@ -9,11 +9,10 @@
 
 namespace maomao90 {
 using namespace std;
-using namespace internal::concepts;
 
 // 0-indexed
 // left_monoid.merge(right_monoid)
-template <Monoid T> struct SegTree {
+template <internal::concepts::Monoid T> struct SegTree {
   SegTree() : SegTree(0) {}
   explicit SegTree(int n) : SegTree(vector<T>(n, T::id())) {}
   explicit SegTree(const vector<T> &a) : n(int(a.size())) {
