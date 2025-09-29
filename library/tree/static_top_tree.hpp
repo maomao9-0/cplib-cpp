@@ -9,21 +9,21 @@ namespace maomao90 {
 using namespace std;
 
 /**
- * A static top tree supporting single vertex updates and subtree queries on a
- * tree.
+ * A static top tree supporting single vertex updates and subtree queries.
  *
- * Each vertex of the tree has a value. The static top tree can answer queries
- * on the aggregation of values in the subtree of a vertex, and also supports
- * updates to a single vertex value in \f$O(\log_2 n)\f$ time. Note that all
- * indices are 0-indexed.
+ * Each vertex of the tree has an associated value. The static top tree can
+ * answer queries about the aggregation of values within the subtree of a given
+ * vertex and can also support updates to individual vertex values in
+ * \f$O(\log_2 n)\f$ time. All indices are 0-based.
  *
- * @tparam Path the @ref internal::concepts::Monoid "monoid" storing information
- *     of path clusters. Should implement `Path(T x)` constructor for a single
- *     vertex value, and `add_edge()` method to convert to `Point`. Note that
- *     the `merge` function is called using `parent_path.merge(child_path)`.
- * @tparam Point the @ref internal::concepts::Monoid "monoid" storing
- *     information of point clusters. Should implement `add_vertex(T x)` method
- *     to convert to `Path` by including parent vertex value.
+ * @tparam Path the @ref internal::concepts::Monoid "monoid" that stores
+ *     information about path clusters. Must implement `Path(T x)` constructor
+ *     for initialising from a single vertex value, and an `add_edge()` method
+ *     to convert to a `Point`. Note that the `merge` function is invoked as
+ *     `parent_path.merge(child_path)`.
+ * @tparam Point the @ref internal::concepts::Monoid "monoid" that stores
+ *     information about point clusters. Must implement an `add_vertex(T x)`
+ *     method to convert to a `Path` by including the parent vertex value.
  * @tparam T the type of the vertex value.
  * @see @ref internal::concepts::StaticTopTreePathPoint "StaticTopTreePathPoint"
  */
@@ -32,14 +32,13 @@ template <typename Path, typename Point, typename T = int>
 struct StaticTopTree {
   StaticTopTree() {}
   /**
-   * Initialises the static top tree with a tree consisting of `n` vertices
-   * with edges represented by adjacency list `adj`.
+   * Initialises the static top tree with a tree of `n` vertices where the edges
+   * are represented by the adjacency list `adj`.
    *
-   * The vertex values are left uninitialised. The index of the vertices in
-   * `adj` should be 0-indexed.
+   * The vertex values are left uninitialised. `adj` must use 0-indexing.
    *
-   * @param n the number of vertices of the tree.
-   * @param adj the adjacency list representing the edges of the tree.
+   * @param n the number of vertices in the tree.
+   * @param adj the adjacency list representing the tree's edges.
    * @pre `adj.size() == n`
    */
   StaticTopTree(int n, const vector<vector<int>> &adj)
@@ -51,15 +50,15 @@ struct StaticTopTree {
     r = build_path(0).first;
   }
   /**
-   * Initialises the static top tree with a tree consisting of `n` vertices with
-   * values represented by array `a` and edges represented by adjacency list
-   * `adj`.
+   * Initialises the static top tree with a tree of `n` vertices, where vertex
+   * values are given by array `a` and edges are represented by the adjacency
+   * list `adj`.
    *
-   * The index of the vertices in `adj` and array `a` should be 0-indexed.
+   * Both `adj` and `a` must use 0-indexing.
    *
-   * @param n the number of vertices of the tree.
-   * @param adj the adjacency list representing the edges of the tree.
-   * @param a the values of the vertices.
+   * @param n the number of vertices in the tree.
+   * @param adj the adjacency list representing the tree's edges.
+   * @param a the array of vertex values.
    * @pre `adj.size() == n`
    * @pre `a.size() == n`
    */
@@ -74,7 +73,7 @@ struct StaticTopTree {
    *
    * Runs in \f$O(n)\f$ time.
    *
-   * @param a the values of the vertices.
+   * @param a the array of vertex values.
    * @pre `a.size() == n`
    */
   void init(const vector<T> &a) {
@@ -83,10 +82,10 @@ struct StaticTopTree {
     dfs(r);
   }
   /**
-   * Set the value of vertex `u` (0-indexed) to be equal to `x`.
+   * Set the value of vertex `u` (0-indexed) to `x`.
    *
    * @param u the index of the vertex to update.
-   * @param x the new value to update to vertex `u`.
+   * @param x the new value to assign to vertex `u`.
    *
    * @pre `0 <= u < n`.
    */
@@ -100,8 +99,8 @@ struct StaticTopTree {
     }
   }
   /**
-   * Query the aggregation of values in the subtree of vertex `u`
-   * (0-indexed).
+   * Query the aggregation of values over all vertices in the subtree rooted at
+   * vertex `u` (0-indexed).
    *
    * @param u the index of the vertex to query.
    *
