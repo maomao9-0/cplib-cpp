@@ -3,7 +3,7 @@
 #include <cassert>
 #include <vector>
 
-#include "library/data_structure/standard_monoids.hpp"
+#include "library/internal/concepts.hpp"
 
 // Modified from https://judge.yosupo.jp/submission/144167,
 // https://judge.yosupo.jp/submission/136748,
@@ -11,6 +11,7 @@
 
 namespace maomao90 {
 using namespace std;
+using namespace internal::concepts;
 
 namespace internal::splaytree {
 template <Monoid T, Lazy<T> L, bool store_reverse> struct Node {

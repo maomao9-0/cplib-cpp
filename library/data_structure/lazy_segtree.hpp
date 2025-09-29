@@ -3,12 +3,13 @@
 #include <cassert>
 #include <vector>
 
-#include "library/data_structure/standard_monoids.hpp"
+#include "library/internal/concepts.hpp"
 
 // Modified from https://judge.yosupo.jp/submission/242469
 
 namespace maomao90 {
 using namespace std;
+using namespace internal::concepts;
 
 // 0-indexed
 // left_monoid.merge(right_monoid)
