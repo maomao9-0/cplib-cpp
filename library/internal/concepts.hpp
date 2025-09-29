@@ -54,4 +54,23 @@ concept Lazy = requires(const L &lz, const T &x, const int len) {
   { lz.apply(x, len) } -> same_as<T>;
   requires Monoid<L>;
 };
+
+template <typename Path, typename Point, typename T>
+concept StaticTopTreePathPoint =
+    requires(const Path &path, const Point &point, const T &x) {
+      requires Monoid<Path>;
+      requires Monoid<Point>;
+      { Path(x) } -> same_as<Path>;
+      { point.add_vertex(x) } -> same_as<Path>;
+      { path.add_edge() } -> same_as<Point>;
+    };
+
+template <typename Lazy, typename Path, typename Point, typename T>
+concept StaticTopTreeLazy =
+    requires(const Lazy &lz, const Path &path, const Point &point, const T &x) {
+      requires Monoid<Lazy>;
+      { lz.apply(path) } -> same_as<Path>;
+      { lz.apply(point) } -> same_as<Point>;
+      { lz.apply_vertex(x) } -> same_as<T>;
+    };
 } // namespace maomao90::internal::concepts
