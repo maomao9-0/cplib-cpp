@@ -47,11 +47,13 @@ struct Node<T, L, true> {
  * \f$O(\log_2 n)\f$ time. Note that all indices are 0-indexed, and all
  * intervals are half-open: [start, end).
  *
- * @tparam T the monoid to be stored in the treap. Note that the `merge`
- *     function is called using `left_monoid.merge(right_monoid)`.
- * @tparam L the type used to perform range updates on `T`. Note that the
- *     `merge` function is called using `new_update.merge(old_update)`.
- * @tparam store_reverse should be `true` only if range reversal is required
+ * @tparam T the @ref internal::concepts::Monoid "monoid" to be stored in the
+ *     splay tree. Note that the `merge` function is invoked as
+ *     `left_monoid.merge(right_monoid)`.
+ * @tparam L the @ref internal::concepts::Lazy "lazy" type used to perform range
+ *     updates on `T`. Note that the `merge` function is invoked as
+ *     `new_update.merge(old_update)`.
+ * @tparam store_reverse should be `true` only if range reversal is required,
  *     and `T` is not commutative.
  */
 template <internal::concepts::Monoid T, internal::concepts::Lazy<T> L,
