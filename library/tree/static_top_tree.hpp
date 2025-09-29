@@ -184,7 +184,7 @@ private:
     }
     op[u] = o;
   }
-  pair<int, int> merge(vector<pair<int, int>> &lst, Op o) {
+  pair<int, int> merge(const vector<pair<int, int>> &lst, Op o) {
     if (lst.size() == 1) {
       return lst[0];
     }
