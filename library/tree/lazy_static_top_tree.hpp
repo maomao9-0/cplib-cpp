@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <vector>
 
 #include "library/internal/concepts.hpp"
@@ -15,32 +16,39 @@ template <typename Path, typename Point, typename Lazy, typename T = int>
            internal::concepts::StaticTopTreeLazy<Lazy, Path, Point, T>
 struct LazyStaticTopTree {
   LazyStaticTopTree() {}
-  LazyStaticTopTree(int n, vector<vector<int>> &adj)
-      : n(n), adj(adj), lc(4 * n + 5), rc(4 * n + 5), p(4 * n + 5),
-        op(4 * n + 5), path(4 * n + 5, Path::id()),
-        point(4 * n + 5, Point::id()), lz(4 * n + 5, Lazy::id()) {
-    ptr = n + 1;
-    hld(1, -1);
-    r = build_path(1).first;
+  LazyStaticTopTree(int n, const vector<vector<int>> &adj)
+      : n(n), adj(adj), lc(4 * n, -1), rc(4 * n, -1), p(4 * n, -1), op(4 * n),
+        path(4 * n, Path::id()), point(4 * n, Point::id()),
+        lz(4 * n, Lazy::id()) {
+    ptr = n;
+    hld(0, -1);
+    r = build_path(0).first;
   }
-  void init(vector<T> &_a) {
-    a = _a;
+  LazyStaticTopTree(int n, const vector<vector<int>> &adj, const vector<int> &a)
+      : LazyStaticTopTree(n, adj) {
+    assert((int)a.size() == n);
+    this->a = a;
     dfs(r);
   }
-  void update(int u, T &x) {
+  void init(const vector<T> &a) {
+    assert((int)a.size() == n);
+    this->a = a;
+    dfs(r);
+  }
+  void update(int u, const T &x) {
     push_path(u);
     a[u] = x;
     apply(u);
-    while (p[u]) {
+    while (p[u] != -1) {
       u = p[u];
       apply(u);
     }
   }
-  void update_subtree(int u, Lazy x) {
+  void update_subtree(int u, const Lazy &x) {
     int orig_u = u;
     push_path(u);
     apply_update(u, x);
-    while (p[u]) {
+    while (p[u] != -1) {
       if (op[p[u]] == AddEdge) {
         break;
       }
@@ -51,7 +59,7 @@ struct LazyStaticTopTree {
     }
 
     u = orig_u;
-    while (p[u]) {
+    while (p[u] != -1) {
       u = p[u];
       apply(u);
     }
@@ -59,7 +67,7 @@ struct LazyStaticTopTree {
   Path query(int u) {
     push_path(u);
     Path res = path[u];
-    while (p[u]) {
+    while (p[u] != -1) {
       if (op[p[u]] == AddEdge) {
         break;
       }
@@ -82,7 +90,6 @@ private:
   vector<Path> path;
   vector<Point> point;
   vector<Lazy> lz;
-  bool has_rc(int u) { return op[u] == Compress || op[u] == Rake; }
   bool is_point(int u) { return op[u] == AddEdge || op[u] == Rake; }
   int hld(int u, int p) {
     int sub = 1, mx = 0;
@@ -105,10 +112,10 @@ private:
     return sub;
   }
   void dfs(int u) {
-    if (lc[u]) {
+    if (lc[u] != -1) {
       dfs(lc[u]);
     }
-    if (rc[u]) {
+    if (rc[u] != -1) {
       dfs(rc[u]);
     }
     apply(u);
@@ -128,12 +135,14 @@ private:
   }
   inline void add(int u, int l, int r, Op o) {
     lc[u] = l;
-    p[l] = u;
     rc[u] = r;
-    p[r] = u;
+    p[l] = u;
+    if (r != -1) {
+      p[r] = u;
+    }
     op[u] = o;
   }
-  pair<int, int> merge(vector<pair<int, int>> &lst, Op o) {
+  pair<int, int> merge(const vector<pair<int, int>> &lst, Op o) {
     if (lst.size() == 1) {
       return lst[0];
     }
@@ -170,21 +179,21 @@ private:
       lst.push_back(build_edge(adj[u][i]));
     }
     auto [v, s] = merge(lst, Rake);
-    add(u, v, 0, AddVertex);
+    add(u, v, -1, AddVertex);
     return {u, s + 1};
   }
   pair<int, int> build_edge(int u) {
     auto [v, s] = build_path(u);
-    add(ptr, v, 0, AddEdge);
+    add(ptr, v, -1, AddEdge);
     return {ptr++, s + 1};
   }
 
-  void apply_update(int u, Lazy x) {
+  void apply_update(int u, const Lazy &x) {
     if (is_point(u)) {
       point[u] = x.apply(point[u]);
     } else {
       path[u] = x.apply(path[u]);
-      if (u <= n) {
+      if (u < n) {
         a[u] = x.apply_vertex(a[u]);
       }
     }
@@ -193,7 +202,7 @@ private:
   // add lazy, and update both children of u. Reset lazy of u.
   void push(int u) {
     apply_update(lc[u], lz[u]);
-    if (has_rc(u)) {
+    if (rc[u] != -1) {
       apply_update(rc[u], lz[u]);
     }
     lz[u] = Lazy::id();
@@ -201,7 +210,7 @@ private:
   // calls push from root to parent of u (excluding u).
   void push_path(int u) {
     vector<int> path;
-    while (p[u]) {
+    while (p[u] != -1) {
       u = p[u];
       path.push_back(u);
     }
