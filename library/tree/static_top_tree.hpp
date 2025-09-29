@@ -9,7 +9,8 @@ namespace maomao90 {
 using namespace std;
 
 /**
- * A static top tree supporting updates and queries on a tree.
+ * A static top tree supporting single vertex updates and subtree queries on a
+ * tree.
  *
  * Each vertex of the tree has a value. The static top tree can answer queries
  * on the aggregation of values in the subtree of a vertex, and also supports
