@@ -42,10 +42,12 @@ struct Node<T, L, true> {
 /**
  * A balanced binary search tree.
  *
- * Supports operations similar to a LazySegTree. Additionally, also supports
+ * Supports operations similar to a LazySegTree. Additionally, it supports
  * splitting, merging, and range reversals. All operations work in ammortised
- * \f$O(\log_2 n)\f$ time. Note that all indices are 0-indexed, and all
- * intervals are half-open: `[start, end)`.
+ * \f$O(\log_2 n)\f$ time.
+ *
+ * @note All indices are 0-indexed, and all intervals are half-open:
+ * `[start, end)`.
  *
  * @tparam T the @ref internal::concepts::Monoid "monoid" to be stored in the
  *     splay tree. Note that the `merge` function is invoked as
