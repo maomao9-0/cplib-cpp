@@ -143,7 +143,7 @@ template <internal::concepts::Monoid T> struct SegTree {
    *     `[l, x)`, and is exclusive of the right endpoint.
    *
    * @pre `0 <= l <= size()`.
-   * @pre `pred(T::id()) = true`. In particular, `pred(query(l, l))` must be
+   * @pre `pred(T::id()) == true`. In particular, `pred(query(l, l))` must be
    *     true.
    */
   template <class P> int max_right(int l, P pred) {
@@ -195,7 +195,7 @@ template <internal::concepts::Monoid T> struct SegTree {
    *     and is exclusive of the right bound.
    *
    * @pre `0 <= r <= size()`.
-   * @pre `pred(T::id()) = true`. In other words, `pred` should be true for
+   * @pre `pred(T::id()) == true`. In other words, `pred` should be true for
    *     `query(r, r)`.
    */
   template <class P> int min_left(int r, P pred) {
