@@ -22,11 +22,11 @@ template <integral T> struct limits<false, T> {
 };
 template <> struct limits<MIN_FLAG, __int128> {
   static constexpr __int128 value = (__int128)numeric_limits<long long>::min() /
-                                    2 * numeric_limits<long long>::max() / 2;
+                                    2 * numeric_limits<long long>::max();
 };
 template <> struct limits<MAX_FLAG, __int128> {
   static constexpr __int128 value = (__int128)numeric_limits<long long>::max() /
-                                    2 * numeric_limits<long long>::max() / 2;
+                                    2 * numeric_limits<long long>::max();
 };
 
 template <bool is_min, typename A, typename B>
@@ -45,6 +45,14 @@ template <bool is_min> struct limits<is_min, tuple<>> {
 };
 } // namespace internal::monoid
 
+/**
+ * A monoid whose binary operation is the minimum of two values.
+ *
+ * @note The identity function `id()` is defined to as half the `numeric_limits`
+ * of `T`.
+ *
+ * @tparam T the type of the value to compare for the minimum.
+ */
 template <typename T> struct MinMonoid {
   T v;
   static MinMonoid id() {
@@ -52,6 +60,15 @@ template <typename T> struct MinMonoid {
   }
   MinMonoid merge(const MinMonoid &o) const { return {min(v, o.v)}; }
 };
+
+/**
+ * A monoid whose binary operation is the maximum of two values.
+ *
+ * @note The identity function `id()` is defined to as half the `numeric_limits`
+ * of `T`.
+ *
+ * @tparam T the type of the value to compare for the maximum.
+ */
 template <typename T> struct MaxMonoid {
   T v;
   static MaxMonoid id() {
@@ -59,6 +76,12 @@ template <typename T> struct MaxMonoid {
   }
   MaxMonoid merge(const MaxMonoid &o) const { return {max(v, o.v)}; }
 };
+
+/**
+ * A monoid whose binary operation is the sum of two values.
+ *
+ * @tparam T the type of the value to be summed.
+ */
 template <typename T> struct SumMonoid {
   T v;
   static SumMonoid id() { return {T(0)}; }
@@ -66,22 +89,23 @@ template <typename T> struct SumMonoid {
 };
 
 /**
- * Only stores a value, and does not have a binary operation.
+ * Stores a single value without defining a binary operation.
  *
- * Normally used in binary search tree if the only purpose of the BST is to
- * split and merge without requiring any range queries.
+ * Typically used in binary search tree when the only purpose of the BST is to
+ * support split and merge operations, without requiring any range queries.
  *
- * @tparam T the type of the value to be stored.
+ * @tparam T the type of the value to store.
  */
 template <typename T> struct ValueMonoid {
   T v;
   static ValueMonoid id() { return {T()}; }
   ValueMonoid merge(const ValueMonoid &o) const { return ValueMonoid::id(); }
 };
+
 /**
- * Lazy that does not apply any updates.
+ * A lazy operation that does not apply any updates.
  *
- * @tparam T the monoid to be used with the lazy.
+ * @tparam T the monoid to be used with this lazy operation.
  */
 template <typename T> struct NoLazy {
   static NoLazy id() { return {}; }
