@@ -33,7 +33,7 @@ template <internal::concepts::Monoid T> struct SegTree {
   /**
    * Constructs a segment tree from the values in vector `a`.
    *
-   * Runs in \f$O(n)\f$ time.
+   * Time complexity: \f$O(n)\f$.
    *
    * @param a the vector of initial values to build the segment tree.
    */
@@ -119,6 +119,14 @@ template <internal::concepts::Monoid T> struct SegTree {
     return sml.merge(smr);
   }
 
+  /**
+   * Queries the entire segment tree, i.e., equivalent to `query(0, size())`.
+   *
+   * Time complexity: \f$O(1)\f$.
+   *
+   * @returns the result obtained by merging all elements in the segment tree
+   *     using a left-associative fold.
+   */
   T all_query() { return v[1]; }
 
   /**
