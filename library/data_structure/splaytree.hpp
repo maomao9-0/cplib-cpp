@@ -45,7 +45,7 @@ struct Node<T, L, true> {
  * Supports operations similar to a LazySegTree. Additionally, also supports
  * splitting, merging, and range reversals. All operations work in ammortised
  * \f$O(\log_2 n)\f$ time. Note that all indices are 0-indexed, and all
- * intervals are half-open: [start, end).
+ * intervals are half-open: `[start, end)`.
  *
  * @tparam T the @ref internal::concepts::Monoid "monoid" to be stored in the
  *     splay tree. Note that the `merge` function is invoked as
@@ -130,7 +130,7 @@ public:
    *
    * @param l the **inclusive** left endpoint (0-indexed) of the update range.
    * @param r the **exclusive** right endpoint (0-indexed) of the update range.
-   * @param x the update value to be applied.
+   * @param x the update value to apply.
    *
    * @pre `0 <= l <= r <= size()`.
    */

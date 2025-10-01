@@ -10,14 +10,12 @@
 namespace maomao90 {
 using namespace std;
 
-// 0-indexed
-// left_monoid.merge(right_monoid)
-// new_update.merge(old_update)
 /**
  * A lazy segment tree supporting range updates and range queries.
  *
  * All operations runs in \f$O(\log_2 n)\f$ time. Note that all indices are
- * 0-based, and all ranges are represented as half-open intervals: [start, end).
+ * 0-based, and all ranges are represented as half-open intervals:
+ * `[start, end)`.
  *
  * @tparam T the @ref internal::concepts::Monoid "monoid" type to be stored in
  *     the segment tree. The `merge` function is invoked as
@@ -163,13 +161,21 @@ struct LazySegTree {
    */
   T all_query() { return v[1]; }
 
-  void update(int p, L f) {
+  /**
+   * Applies update `x` to the element at index `p` (0-indexed).
+   *
+   * @param p the index to update.
+   * @param x the update value to apply.
+   *
+   * @pre `0 <= p < size()`.
+   */
+  void update(int p, L x) {
     assert(0 <= p && p < n);
     p += size_pw2;
     for (int i = log; i >= 1; i--) {
       push(p >> i);
     }
-    v[p] = f.apply(v[p], 1);
+    v[p] = x.apply(v[p], 1);
     for (int i = 1; i <= log; i++) {
       update(p >> i);
     }
@@ -180,7 +186,7 @@ struct LazySegTree {
    *
    * @param l the **inclusive** left endpoint (0-indexed) of the update range.
    * @param r the **exclusive** right endpoint (0-indexed) of the update range.
-   * @param x the update value to be applied.
+   * @param x the update value to apply.
    *
    * @pre `0 <= l <= r <= size()`.
    */

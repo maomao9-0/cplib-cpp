@@ -14,7 +14,8 @@ using namespace std;
  * A segment tree supporting point updates and range queries.
  *
  * All operations runs in \f$O(\log_2 n)\f$ time. Note that all indices are
- * 0-based, and all ranges are represented as half-open intervals: [start, end).
+ * 0-based, and all ranges are represented as half-open intervals:
+ * `[start, end)`.
  *
  * @tparam T the @ref internal::concepts::Monoid "monoid" type to be stored in
  *     the segment tree. The `merge` function is invoked as
