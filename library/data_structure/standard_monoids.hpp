@@ -48,10 +48,10 @@ template <bool is_min> struct limits<is_min, tuple<>> {
 /**
  * A monoid whose binary operation is the minimum of two values.
  *
- * @note The identity function `id()` is defined to as half the `numeric_limits`
- * of `T`.
+ * @note The identity function `id()` is defined as half
+ * `numeric_limits<T>::max()` of `T`.
  *
- * @tparam T the type of the value to compare for the minimum.
+ * @tparam T the value type over which the minimum operation is defined.
  */
 template <typename T> struct MinMonoid {
   T v;
@@ -64,10 +64,10 @@ template <typename T> struct MinMonoid {
 /**
  * A monoid whose binary operation is the maximum of two values.
  *
- * @note The identity function `id()` is defined to as half the `numeric_limits`
- * of `T`.
+ * @note The identity function `id()` is defined as half
+ * `numeric_limits<T>::min()` of `T`.
  *
- * @tparam T the type of the value to compare for the maximum.
+ * @tparam T the value type over which the maximum operation is defined.
  */
 template <typename T> struct MaxMonoid {
   T v;
