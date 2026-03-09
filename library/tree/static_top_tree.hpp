@@ -62,7 +62,7 @@ struct StaticTopTree {
    * @pre `adj.size() == n`
    * @pre `a.size() == n`
    */
-  StaticTopTree(int n, const vector<vector<int>> &adj, const vector<int> &a)
+  StaticTopTree(int n, const vector<vector<int>> &adj, const vector<T> &a)
       : StaticTopTree(n, adj) {
     assert((int)a.size() == n);
     this->a = a;
