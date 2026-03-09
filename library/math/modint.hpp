@@ -157,6 +157,7 @@ public:
   constexpr bool operator!=(const static_modint &o) const {
     return !(*this == o);
   }
+  explicit constexpr operator bool() const { return v; }
 
   friend constexpr istream &operator>>(istream &is, static_modint &o) {
     M v;
@@ -294,6 +295,7 @@ public:
   constexpr bool operator!=(const dynamic_modint &o) const {
     return !(*this == o);
   }
+  explicit constexpr operator bool() const { return v; }
 
   friend constexpr istream &operator>>(istream &is, dynamic_modint &o) {
     int v;
