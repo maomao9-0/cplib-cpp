@@ -67,7 +67,7 @@ struct LazyStaticTopTree {
    * @pre `adj.size() == n`
    * @pre `a.size() == n`
    */
-  LazyStaticTopTree(int n, const vector<vector<int>> &adj, const vector<int> &a)
+  LazyStaticTopTree(int n, const vector<vector<int>> &adj, const vector<T> &a)
       : LazyStaticTopTree(n, adj) {
     assert((int)a.size() == n);
     this->a = a;

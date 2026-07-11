@@ -57,25 +57,6 @@ struct HashMap {
   }
 
   /**
-   * Removes the element with the specified key `k` from the hashmap.
-   *
-   * If the key does not exist, the hashmap remains unchanged and the function
-   * returns `false`.
-   *
-   * @param k the key of the element to erase.
-   * @returns `true` if an element associated with key `k` was found and
-   *     removed, `false` otherwise.
-   */
-  constexpr bool erase(const K &k) {
-    int index = get_index(k);
-    if (!vis[index]) {
-      return 0;
-    }
-    vis[index] = 0;
-    return 1;
-  }
-
-  /**
    * Checks whether the hashmap contains an element with the specified key `k`.
    *
    * @param k the key to check for.

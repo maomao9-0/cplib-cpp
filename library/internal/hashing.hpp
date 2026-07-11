@@ -67,6 +67,10 @@ template <typename T> unsigned long long hash_function(const T &x) {
     m ^= m >> 31;
     m ^= m << 35;
     return m;
+  } else {
+    static_assert(false,
+                  "hash_function only supports integral, pair, or iterable "
+                  "types by default");
   }
 }
 

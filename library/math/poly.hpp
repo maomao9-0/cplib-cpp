@@ -15,6 +15,10 @@
 namespace maomao90 {
 using namespace std;
 namespace internal::poly {
+template <typename T> inline long long round_integral(T x) {
+  return x < 0 ? (long long)(x - T(0.5)) : (long long)(x + T(0.5));
+}
+
 template <class T>
 vector<T> convolution_naive(const vector<T> &a, const vector<T> &b) {
   int n = a.size(), m = b.size();
@@ -454,14 +458,14 @@ inline vector<T> convolution(const vector<T> &ta, const vector<T> &tb) {
   vector<T> res(n + m - 1);
   for (int i = 0; i < n + m - 1; i++) {
     if constexpr (integral<T>) {
-      res[i] = imag(out[i]) / (4 * z) + 0.5;
+      res[i] = T(round_integral(imag(out[i]) / (4 * z)));
     } else {
       res[i] = imag(out[i]) / (4 * z);
     }
   }
   return res;
 }
-template <concepts::broadly_integral T>
+template <concepts::broadly_unsigned_integral T>
 inline vector<T> convolution_sqrt(const vector<T> &a, const vector<T> &b) {
   int n = a.size(), m = b.size();
   if (!n || !m) {
@@ -529,10 +533,10 @@ vector<mint> convolution_arb_mod(const vector<mint> &a, const vector<mint> &b) {
 }
 template <typename T>
   requires is_floating_point_v<T>
-vector<complex<T>> convolution_complex(const vector<complex<T>> &a,
-                                       const vector<complex<T>> &b) {
+vector<complex<T>> convolution_complex(vector<complex<T>> a,
+                                       vector<complex<T>> b) {
   int n = a.size(), m = b.size();
-  if (!a || !b) {
+  if (!n || !m) {
     return {};
   }
   if (min(n, m) <= 60) {
@@ -567,8 +571,8 @@ template <ModInt T> struct is_valid_setting<T, PolySetting::ntt> : true_type {};
 template <integral T>
   requires internal::type_traits::is_64bit_or_less_v<T>
 struct is_valid_setting<T, PolySetting::ntt> : true_type {};
-// fft_sqrt allow broadly_integral types or ModInt
-template <internal::concepts::broadly_integral T>
+// fft_sqrt allows unsigned integral types or ModInt
+template <internal::concepts::broadly_unsigned_integral T>
 struct is_valid_setting<T, PolySetting::fft_sqrt> : true_type {};
 template <ModInt T>
 struct is_valid_setting<T, PolySetting::fft_sqrt> : true_type {};

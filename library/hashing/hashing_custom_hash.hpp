@@ -12,7 +12,8 @@ template <typename T>
 concept Hashing = requires(T v) {
   requires StaticModInt<typename T::mint>;
   requires internal::concepts::Iterable<decltype(v.get_v())>;
-  requires is_same_v<typename decltype(v.get_v())::value_type,
+  requires is_same_v<
+      typename remove_cvref_t<decltype(v.get_v())>::value_type,
                      typename T::mint::umod_type>;
 };
 template <Hashing T> struct HashingCustomHash {
