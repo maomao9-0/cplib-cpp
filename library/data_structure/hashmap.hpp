@@ -1,3 +1,10 @@
+/**
+ * @file hashmap.hpp
+ * @brief Fixed-capacity linear-probing hash table
+ *
+ * `HashMap` is fast when the load factor stays low, but it has no erase API and
+ * can loop forever if `2^LG` is undersized for the number of occupied keys.
+ */
 #pragma once
 
 #include <bitset>
@@ -9,23 +16,18 @@ namespace maomao90 {
 using namespace std;
 
 /**
- * A hash table.
+ * @brief Fixed-capacity associative array with linear probing.
  *
- * Collisions are resolved using linear probing.
+ * Time complexity is amortized near \f$O(1)\f$ under a low load factor.
  *
- * Time complexity: \f$O(1)\f$.
- *
- * Space complexity: \f$O(n)\f$ with a large constant, where \f$n\f$ is the
- * number of insertions into the hashmap.
- *
- * @tparam K the type of the key.
- * @tparam T the type of the value.
- * @tparam Hash the type of the hash object, which overloads the function call
- *     operator `size_t ::(const T&)` and returns the hash of the key.
- * @tparam KEEP_HISTORY should be `true` if iteration over key-value pairs is
- *     needed.
- * @tparam LG the number of buckets stored is \f$2^{LG}\f$. It should be at
- *     least twice the number of insertions into the hashmap.
+ * @tparam K Key type.
+ * @tparam T Mapped value type.
+ * @tparam Hash Hash functor for `K`.
+ * @tparam KEEP_HISTORY If `true`, remembers occupied slots so `for_each()` and
+ * `clear()` scale with the number of inserted keys.
+ * @tparam LG Number of buckets is exactly \f$2^{LG}\f$.
+ * @warning If `2^LG` is too small for the number of occupied keys, probing can
+ * end up in an infinite loop.
  */
 template <typename K, typename T,
           typename Hash = internal::hashing::HashObject<K>,

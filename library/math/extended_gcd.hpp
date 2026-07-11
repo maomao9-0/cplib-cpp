@@ -1,3 +1,7 @@
+/**
+ * @file extended_gcd.hpp
+ * @brief Extended Euclid helpers for non-negative signed integers.
+ */
 #pragma once
 
 #include <cassert>
@@ -10,6 +14,13 @@ namespace maomao90 {
 using namespace std;
 template <signed_integral T>
   requires internal::type_traits::is_64bit_or_less_v<T>
+/**
+ * @brief Computes the modular inverse of `x` modulo `mod`.
+ * @param x Residue in `[0, mod)`.
+ * @param mod Positive modulus.
+ * @return Unique inverse in `[0, mod)`.
+ * @warning Requires `gcd(x, mod) == 1`.
+ */
 constexpr T inv_gcd(T x, T mod) {
   using U = internal::type_traits::safely_multipliable_t<T>;
   assert(x >= 0 && mod > 0);
@@ -32,6 +43,17 @@ constexpr T inv_gcd(T x, T mod) {
 
 template <signed_integral T>
   requires internal::type_traits::is_64bit_or_less_v<T>
+/**
+ * @brief Extended Euclidean algorithm.
+ *
+ * Finds `x` and `y` such that `a * x + b * y == gcd(a, b)`.
+ *
+ * @param a Non-negative integer.
+ * @param b Non-negative integer.
+ * @param x Output coefficient for `a`.
+ * @param y Output coefficient for `b`.
+ * @return `gcd(a, b)`.
+ */
 constexpr T extended_gcd(T a, T b, T &x, T &y) {
   using U = internal::type_traits::safely_multipliable_t<T>;
   assert(a >= 0 && b >= 0);

@@ -1,3 +1,11 @@
+/**
+ * @file poly.hpp
+ * @brief Polynomial multiplication helpers backed by NTT and FFT variants.
+ *
+ * `Poly` only models multiplication. For NTT-based paths, the modulus and
+ * resulting convolution length must support the required root of unity; the
+ * implementation falls back only in the cases encoded below.
+ */
 #pragma once
 
 #include <algorithm>
@@ -557,6 +565,7 @@ vector<complex<T>> convolution_complex(vector<complex<T>> a,
 }
 } // namespace fft
 } // namespace internal::poly
+/// @brief Backend used by `Poly` multiplication.
 enum PolySetting {
   ntt,
   fft,      // faster than fft_sqrt but less precision
@@ -593,15 +602,29 @@ template <
     typename T, PolySetting poly_setting,
     enable_if_t<internal::type_traits::is_valid_setting_v<T, poly_setting>,
                 nullptr_t> = nullptr>
+/**
+ * @brief Polynomial represented by coefficients in ascending degree order.
+ *
+ * @tparam T Coefficient type compatible with `poly_setting`.
+ * @tparam poly_setting Multiplication backend.
+ * @note `PolySetting::ntt` requires a usable NTT modulus or the built-in CRT path.
+ */
 struct Poly {
+  /// @brief Constant zero polynomial.
   constexpr Poly() : v(1, 0) {}
+  /// @brief Polynomial with `n` zero coefficients.
   constexpr Poly(int n) : v(n) {}
+  /// @brief Polynomial from an explicit coefficient vector.
   constexpr Poly(vector<T> v) : v(v) {}
 
+  /// @brief Highest exponent currently stored.
   constexpr int degree() const { return v.size() - 1; }
+  /// @brief Read-only coefficient access by degree.
   constexpr T operator[](int i) const { return v[i]; }
+  /// @brief Mutable coefficient access by degree.
   constexpr T &operator[](int i) { return v[i]; }
 
+  /// @brief Multiplies by another polynomial in place.
   constexpr Poly &operator*=(const Poly &o) {
     if constexpr (poly_setting == PolySetting::ntt) {
       if constexpr (ModInt<T>) {

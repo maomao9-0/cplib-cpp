@@ -1,3 +1,10 @@
+/**
+ * @file primality_test.hpp
+ * @brief Deterministic Miller-Rabin primality testing for 64-bit unsigned integers.
+ *
+ * The provided base sets make `is_prime()` deterministic for unsigned integer
+ * types up to 64 bits.
+ */
 #pragma once
 
 #include <concepts>
@@ -9,6 +16,14 @@ namespace maomao90 {
 using namespace std;
 template <unsigned_integral T>
   requires internal::type_traits::is_64bit_or_less_v<T>
+/**
+ * @brief Miller-Rabin primality test with caller-supplied bases.
+ * @param n Number to test.
+ * @param bases Witness array.
+ * @param size Number of witnesses.
+ * @return `true` if `n` passes all witnesses.
+ * Complexity: `O(size log n)`.
+ */
 constexpr bool miller_rabin(const T &n, const T *bases, const size_t size) {
   using U = internal::type_traits::safely_multipliable_t<T>;
   if (n <= 1) {
@@ -41,6 +56,7 @@ constexpr bool miller_rabin(const T &n, const T *bases, const size_t size) {
 }
 template <unsigned_integral T>
   requires internal::type_traits::is_64bit_or_less_v<T>
+/// @brief Deterministic primality test for unsigned 32-bit and 64-bit inputs.
 constexpr bool is_prime(T n) {
   if constexpr (internal::type_traits::is_32bit_or_less_v<T>) {
     T bases[3] = {2, 7, 61};

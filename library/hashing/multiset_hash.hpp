@@ -1,3 +1,10 @@
+/**
+ * @file multiset_hash.hpp
+ * @brief Randomized hash for multisets of signed integer values.
+ *
+ * This is useful when multisets need fast equality checks or affine shifts of
+ * all values, but the result is still a probabilistic hash.
+ */
 #pragma once
 
 #include <array>
@@ -9,10 +16,33 @@ namespace maomao90 {
 using namespace std;
 template <StaticModInt mint = static_modint<(1ll << 61) - 1>,
           size_t num_bases = 1, size_t CACHE = 1'000'000>
+/**
+ * @brief Probabilistic hash of an integer multiset.
+ *
+ * @tparam mint Static modint used for each base.
+ * @tparam num_bases Number of independent random bases.
+ * @tparam CACHE Number of precomputed powers for fast small offsets.
+ * @details The hash is represented under `num_bases` random bases. Different
+ * update sequences that describe the same multiset produce the same hash value.
+ * The arithmetic operators also let the hash behave like a signed multiset sum.
+ *
+ * Typical costs are:
+ * - `insert()` / `erase()` / `offset()`: `O(num_bases)` when the queried power
+ *   is cached, otherwise `O(num_bases * log |x|)`.
+ * - `get_v()`, `operator+`, `operator-`, comparisons: `O(num_bases)`.
+ *
+ * @note Equal objects mean hash equality, not a proof of multiset equality.
+ * @note Hash values are not stable across different program runs.
+ */
 struct MultisetHash {
   static_assert(mint::umod() > internal::hashing::MIN_HASH_BASE,
                 "MultisetHash requires mint::umod() > MIN_HASH_BASE");
 
+  /**
+   * @brief Returns the hash coordinates under each random base.
+   * @return Array of residues, one per base.
+   * Complexity: `O(num_bases)`.
+   */
   constexpr array<typename mint::umod_type, num_bases> get_v() const {
     array<typename mint::umod_type, num_bases> res;
     for (int i = 0; i < num_bases; i++) {
@@ -20,7 +50,11 @@ struct MultisetHash {
     }
     return res;
   }
-  // insert `cnt` copies of `a` into multiset
+  /**
+   * @brief Returns the hash after inserting `cnt` copies of `a`.
+   * Complexity: `O(num_bases)` with cached powers, otherwise
+   * `O(num_bases * log |a|)`.
+   */
   constexpr MultisetHash insert(long long a, long long cnt = 1) const {
     MultisetHash res = *this;
     for (int i = 0; i < num_bases; i++) {
@@ -28,7 +62,11 @@ struct MultisetHash {
     }
     return res;
   }
-  // erase `cnt` copies of `a` into multiset
+  /**
+   * @brief Returns the hash after erasing `cnt` copies of `a`.
+   * Complexity: `O(num_bases)` with cached powers, otherwise
+   * `O(num_bases * log |a|)`.
+   */
   constexpr MultisetHash erase(long long a, long long cnt = 1) const {
     MultisetHash res = *this;
     for (int i = 0; i < num_bases; i++) {
@@ -36,8 +74,12 @@ struct MultisetHash {
     }
     return res;
   }
-  // increases all values in multiset by `delta`
-  // (`delta` can be negative)
+  /**
+   * @brief Adds `delta` to every multiset element.
+   * @param delta Signed offset applied to all stored values.
+   * Complexity: `O(num_bases)` with cached powers, otherwise
+   * `O(num_bases * log |delta|)`.
+   */
   constexpr MultisetHash offset(long long delta) const {
     MultisetHash res = *this;
     for (int i = 0; i < num_bases; i++) {
@@ -45,26 +87,31 @@ struct MultisetHash {
     }
     return res;
   }
+  /// @brief Adds hashes as signed multisets. Complexity: `O(num_bases)`.
   constexpr MultisetHash operator+(const MultisetHash &o) const {
     MultisetHash res = *this;
     return res += o;
   }
+  /// @brief In-place multiset hash addition. Complexity: `O(num_bases)`.
   constexpr MultisetHash &operator+=(const MultisetHash &o) {
     for (int i = 0; i < num_bases; i++) {
       v[i] += o.v[i];
     }
     return *this;
   }
+  /// @brief Subtracts hashes as signed multisets. Complexity: `O(num_bases)`.
   constexpr MultisetHash operator-(const MultisetHash &o) const {
     MultisetHash res = *this;
     return res -= o;
   }
+  /// @brief In-place multiset hash subtraction. Complexity: `O(num_bases)`.
   constexpr MultisetHash &operator-=(const MultisetHash &o) {
     for (int i = 0; i < num_bases; i++) {
       v[i] -= o.v[i];
     }
     return *this;
   }
+  /// @brief Compares all bases for equality. Complexity: `O(num_bases)`.
   constexpr bool operator==(const MultisetHash &o) const {
     for (int i = 0; i < num_bases; i++) {
       if (v[i] != o.v[i]) {
@@ -73,6 +120,7 @@ struct MultisetHash {
     }
     return true;
   }
+  /// @brief Negated equality comparison. Complexity: `O(num_bases)`.
   constexpr bool operator!=(const MultisetHash &o) const {
     return !(*this == o);
   }
