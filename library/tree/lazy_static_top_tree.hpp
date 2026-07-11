@@ -84,6 +84,9 @@ struct LazyStaticTopTree {
   void init(const vector<T> &a) {
     assert((int)a.size() == n);
     this->a = a;
+    for (Lazy &x : lz) {
+      x = Lazy::id();
+    }
     dfs(r);
   }
   /**
@@ -97,6 +100,9 @@ struct LazyStaticTopTree {
   void update(int u, const T &x) {
     assert(0 <= u && u < n);
     push_path(u);
+    if (lc[u] != -1) {
+      push(u);
+    }
     a[u] = x;
     apply(u);
     while (p[u] != -1) {
