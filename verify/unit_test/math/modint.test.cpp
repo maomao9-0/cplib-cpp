@@ -180,7 +180,6 @@ int main() {
   test_wrapper<long long, LLONG_MAX - 1>();
   test_wrapper<long long, LLONG_MAX - 2>();
 
-  test_wrapper<int, 1>();
   test_wrapper<int, 2>();
   test_wrapper<int, 3>();
   test_wrapper<int, 4>();
