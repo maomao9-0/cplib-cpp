@@ -7,10 +7,11 @@
 
 namespace maomao90 {
 using namespace std;
-template <StaticModInt modint = static_modint<(1ll << 61) - 1>,
+template <StaticModInt mint = static_modint<(1ll << 61) - 1>,
           size_t num_bases = 1, size_t CACHE = 1'000'000>
 struct MultisetHash {
-  using mint = modint;
+  static_assert(mint::umod() > internal::hashing::MIN_HASH_BASE,
+                "MultisetHash requires mint::umod() > MIN_HASH_BASE");
 
   constexpr array<typename mint::umod_type, num_bases> get_v() const {
     array<typename mint::umod_type, num_bases> res;

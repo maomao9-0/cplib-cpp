@@ -6,21 +6,24 @@
 
 #include "library/internal/concepts.hpp"
 #include "library/internal/type_traits.hpp"
+#include "library/math/modint.hpp"
 
 namespace maomao90::internal::hashing {
 using namespace std;
 const int MIN_HASH_BASE = 128;
 static mt19937_64
     rng(chrono::high_resolution_clock::now().time_since_epoch().count());
-template <typename mint, size_t num_bases>
+template <StaticModInt mint, size_t num_bases>
 constexpr array<mint, num_bases> gen_bases() {
+  static_assert(mint::umod() > MIN_HASH_BASE,
+                "hash base generation requires mint::umod() > MIN_HASH_BASE");
   array<mint, num_bases> res;
   for (int i = 0; i < num_bases; i++) {
     res[i] = mint::raw(rng() % (mint::umod() - MIN_HASH_BASE) + MIN_HASH_BASE);
   }
   return res;
 }
-template <typename mint, size_t num_bases>
+template <StaticModInt mint, size_t num_bases>
 constexpr array<mint, num_bases>
 gen_inverse(const array<mint, num_bases> &bases) {
   array<mint, num_bases> res;
@@ -29,7 +32,7 @@ gen_inverse(const array<mint, num_bases> &bases) {
   }
   return res;
 }
-template <typename mint, size_t num_bases, size_t CACHE>
+template <StaticModInt mint, size_t num_bases, size_t CACHE>
 constexpr array<array<mint, CACHE>, num_bases>
 init_power(const array<mint, num_bases> &bases) {
   array<array<mint, CACHE>, num_bases> res;
