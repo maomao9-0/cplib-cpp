@@ -3,13 +3,13 @@
  * @brief Helpers for Min_25-style prefix sums of multiplicative functions.
  *
  * Given a multiplicative function `f`, `lucy_dp()` and `min25_sieve()` can be
- * combined to compute `sum_{i=1}^N f(i)` in roughly `O(N^{3/4} / log N)` time.
- * As a side effect, they also produce prefix sums on the distinct quotient set
- * `floor(N / k)`.
+ * combined to compute \f$\sum_{i=1}^N f(i)\f$ in roughly
+ * \f$O(N^{3/4} / \log N)\f$ time. As a side effect, they also produce prefix
+ * sums on the distinct quotient set \f$\left\lfloor N / k \right\rfloor\f$.
  *
- * Both helpers expect the caller to prepare the `2 * floor(sqrt(n))` layout
- * correctly; passing an inconsistent buffer shape or wrong prefix sums breaks
- * the formulas.
+ * Both helpers expect the caller to prepare the
+ * \f$2 \lfloor \sqrt{n} \rfloor\f$ layout correctly; passing an inconsistent
+ * buffer shape or wrong prefix sums breaks the formulas.
  */
 #pragma once
 
@@ -24,32 +24,33 @@ using namespace std;
 /**
  * @brief Lucy DP transform for prime-indexed contributions.
  *
- * Let `m = floor(sqrt(n))`. The input `sumg` has size `2 * m`.
+ * Let \f$m = \lfloor \sqrt{n} \rfloor\f$. The input `sumg` has size \f$2m\f$.
  *
- * For `0 <= i < m`, `sumg[i]` represents:
- * `sum_{x=2}^{i+1} g(x)`.
+ * For \f$0 \le i < m\f$, `sumg[i]` represents:
+ * \f$\sum_{x=2}^{i+1} g(x)\f$.
  *
- * For `m <= i < 2 * m`, `sumg[i]` represents:
- * `sum_{x=2}^{floor(n / (2 * m - i))} g(x)`.
+ * For \f$m \le i < 2m\f$, `sumg[i]` represents:
+ * \f$\sum_{x=2}^{\lfloor n / (2m - i) \rfloor} g(x)\f$.
  *
  * In other words, `sumg` stores the prefix sum of `g` on the distinct values of
- * `floor(n / k)`, excluding `g(1)`.
+ * \f$\left\lfloor n / k \right\rfloor\f$, excluding \f$g(1)\f$.
  *
  * The callable `g` is only queried on primes. The result has the same layout as
  * `sumg`, but transformed so that only prime indices contribute:
  *
- * For `0 <= i < m`, the returned value is:
- * `sum_{x=2}^{i+1} g(x) * [is_prime(x)]`.
+ * For \f$0 \le i < m\f$, the returned value is:
+ * \f$\sum_{x=2}^{i+1} g(x) [\mathrm{is\_prime}(x)]\f$.
  *
- * For `m <= i < 2 * m`, the returned value is:
- * `sum_{x=2}^{floor(n / (2 * m - i))} g(x) * [is_prime(x)]`.
+ * For \f$m \le i < 2m\f$, the returned value is:
+ * \f$\sum_{x=2}^{\lfloor n / (2m - i) \rfloor} g(x)
+ * [\mathrm{is\_prime}(x)]\f$.
  *
  * @param n Target upper bound.
  * @param sumg Precomputed prefix sums in the standard Min_25 layout.
- * @param g Function evaluated at primes, where `g(p)` returns the value of `g`
- * at a prime `p`.
+ * @param g Function evaluated at primes, where `g(p)` returns the value of
+ * \f$g\f$ at a prime \f$p\f$.
  * @return Prefix sums with non-prime contributions removed.
- * Complexity: `O(n^{3/4} / log n)`.
+ * Complexity: \f$O(n^{3/4} / \log n)\f$.
  * @warning Requires `sumg.size() == 2 * floor(sqrt(n))`.
  */
 template <typename T, typename G>
@@ -100,39 +101,40 @@ vector<T> lucy_dp(long long n, vector<T> sumg, G g) {
 /**
  * @brief Min_25 sieve transition from prime contributions to full prefix sums.
  *
- * The input `sumfp` has the same `2 * floor(sqrt(n))` layout as `lucy_dp()`,
- * but stores prime-only prefix sums of `f`:
+ * The input `sumfp` has the same \f$2 \lfloor \sqrt{n} \rfloor\f$ layout as
+ * `lucy_dp()`, but stores prime-only prefix sums of \f$f\f$:
  *
- * For `0 <= i < m`, `sumfp[i]` is:
- * `sum_{x=2}^{i+1} f(x) * [is_prime(x)]`.
+ * For \f$0 \le i < m\f$, `sumfp[i]` is:
+ * \f$\sum_{x=2}^{i+1} f(x) [\mathrm{is\_prime}(x)]\f$.
  *
- * For `m <= i < 2 * m`, `sumfp[i]` is:
- * `sum_{x=2}^{floor(n / (2 * m - i))} f(x) * [is_prime(x)]`.
+ * For \f$m \le i < 2m\f$, `sumfp[i]` is:
+ * \f$\sum_{x=2}^{\lfloor n / (2m - i) \rfloor} f(x)
+ * [\mathrm{is\_prime}(x)]\f$.
  *
  * The callable `f` is queried as `f(p, k)` and should return the value of
- * `f(p^k)` for a prime `p`. This is enough to recover a multiplicative
+ * \f$f(p^k)\f$ for a prime \f$p\f$. This is enough to recover a multiplicative
  * function on all positive integers.
  *
  * The result again uses the same quotient layout, but now stores the full
  * prefix sum of `f`, including composite values and `f(1)`:
  *
- * For `0 <= i < m`, the returned value is:
- * `sum_{x=1}^{i+1} f(x)`.
+ * For \f$0 \le i < m\f$, the returned value is:
+ * \f$\sum_{x=1}^{i+1} f(x)\f$.
  *
- * For `m <= i < 2 * m`, the returned value is:
- * `sum_{x=1}^{floor(n / (2 * m - i))} f(x)`.
+ * For \f$m \le i < 2m\f$, the returned value is:
+ * \f$\sum_{x=1}^{\lfloor n / (2m - i) \rfloor} f(x)\f$.
  *
- * Complexity: `O(n^{3/4} / log n)`.
+ * Complexity: \f$O(n^{3/4} / \log n)\f$.
  *
  * Example:
- * Suppose `f(p^k) = p^2 + k p`. Then `f(p) = p^2 + p`, but directly feeding
- * `g(p) = p^2 + p` into `lucy_dp()` is invalid because `g` is not
- * multiplicative: `g(2) g(3) = 72`, while `g(6) = 42`.
+ * Suppose \f$f(p^k) = p^2 + kp\f$. Then \f$f(p) = p^2 + p\f$, but directly
+ * feeding \f$g(p) = p^2 + p\f$ into `lucy_dp()` is invalid because \f$g\f$ is
+ * not multiplicative: \f$g(2)g(3) = 72\f$, while \f$g(6) = 42\f$.
  *
  * Instead, split the prime contribution into two multiplicative parts:
- * `g1(p) = p` and `g2(p) = p^2`. Their prefix sums are easy to precompute in
- * `O(1)` per queried value, and the prime-only sums produced by `lucy_dp()`
- * can be added together to form `sumfp`.
+ * \f$g_1(p) = p\f$ and \f$g_2(p) = p^2\f$. Their prefix sums are easy to
+ * precompute in \f$O(1)\f$ per queried value, and the prime-only sums produced
+ * by `lucy_dp()` can be added together to form `sumfp`.
  *
  * @code{.cpp}
  * #include <cmath>

@@ -27,9 +27,11 @@ template <StaticModInt mint = static_modint<(1ll << 61) - 1>,
  * The arithmetic operators also let the hash behave like a signed multiset sum.
  *
  * Typical costs are:
- * - `insert()` / `erase()` / `offset()`: `O(num_bases)` when the queried power
- *   is cached, otherwise `O(num_bases * log |x|)`.
- * - `get_v()`, `operator+`, `operator-`, comparisons: `O(num_bases)`.
+ * - `insert()` / `erase()` / `offset()`: \f$O(\texttt{num\_bases})\f$ when the
+ *   queried power is cached, otherwise
+ *   \f$O(\texttt{num\_bases} \log |x|)\f$.
+ * - `get_v()`, `operator+`, `operator-`, comparisons:
+ *   \f$O(\texttt{num\_bases})\f$.
  *
  * @note Equal objects mean hash equality, not a proof of multiset equality.
  * @note Hash values are not stable across different program runs.
@@ -41,7 +43,7 @@ struct MultisetHash {
   /**
    * @brief Returns the hash coordinates under each random base.
    * @return Array of residues, one per base.
-   * Complexity: `O(num_bases)`.
+   * Complexity: \f$O(\texttt{num\_bases})\f$.
    */
   constexpr array<typename mint::umod_type, num_bases> get_v() const {
     array<typename mint::umod_type, num_bases> res;
@@ -52,8 +54,8 @@ struct MultisetHash {
   }
   /**
    * @brief Returns the hash after inserting `cnt` copies of `a`.
-   * Complexity: `O(num_bases)` with cached powers, otherwise
-   * `O(num_bases * log |a|)`.
+   * Complexity: \f$O(\texttt{num\_bases})\f$ with cached powers, otherwise
+   * \f$O(\texttt{num\_bases} \log |a|)\f$.
    */
   constexpr MultisetHash insert(long long a, long long cnt = 1) const {
     MultisetHash res = *this;
@@ -64,8 +66,8 @@ struct MultisetHash {
   }
   /**
    * @brief Returns the hash after erasing `cnt` copies of `a`.
-   * Complexity: `O(num_bases)` with cached powers, otherwise
-   * `O(num_bases * log |a|)`.
+   * Complexity: \f$O(\texttt{num\_bases})\f$ with cached powers, otherwise
+   * \f$O(\texttt{num\_bases} \log |a|)\f$.
    */
   constexpr MultisetHash erase(long long a, long long cnt = 1) const {
     MultisetHash res = *this;
@@ -77,8 +79,8 @@ struct MultisetHash {
   /**
    * @brief Adds `delta` to every multiset element.
    * @param delta Signed offset applied to all stored values.
-   * Complexity: `O(num_bases)` with cached powers, otherwise
-   * `O(num_bases * log |delta|)`.
+   * Complexity: \f$O(\texttt{num\_bases})\f$ with cached powers, otherwise
+   * \f$O(\texttt{num\_bases} \log |\delta|)\f$.
    */
   constexpr MultisetHash offset(long long delta) const {
     MultisetHash res = *this;
@@ -87,31 +89,31 @@ struct MultisetHash {
     }
     return res;
   }
-  /// @brief Adds hashes as signed multisets. Complexity: `O(num_bases)`.
+  /// @brief Adds hashes as signed multisets. Complexity: \f$O(\texttt{num\_bases})\f$.
   constexpr MultisetHash operator+(const MultisetHash &o) const {
     MultisetHash res = *this;
     return res += o;
   }
-  /// @brief In-place multiset hash addition. Complexity: `O(num_bases)`.
+  /// @brief In-place multiset hash addition. Complexity: \f$O(\texttt{num\_bases})\f$.
   constexpr MultisetHash &operator+=(const MultisetHash &o) {
     for (int i = 0; i < num_bases; i++) {
       v[i] += o.v[i];
     }
     return *this;
   }
-  /// @brief Subtracts hashes as signed multisets. Complexity: `O(num_bases)`.
+  /// @brief Subtracts hashes as signed multisets. Complexity: \f$O(\texttt{num\_bases})\f$.
   constexpr MultisetHash operator-(const MultisetHash &o) const {
     MultisetHash res = *this;
     return res -= o;
   }
-  /// @brief In-place multiset hash subtraction. Complexity: `O(num_bases)`.
+  /// @brief In-place multiset hash subtraction. Complexity: \f$O(\texttt{num\_bases})\f$.
   constexpr MultisetHash &operator-=(const MultisetHash &o) {
     for (int i = 0; i < num_bases; i++) {
       v[i] -= o.v[i];
     }
     return *this;
   }
-  /// @brief Compares all bases for equality. Complexity: `O(num_bases)`.
+  /// @brief Compares all bases for equality. Complexity: \f$O(\texttt{num\_bases})\f$.
   constexpr bool operator==(const MultisetHash &o) const {
     for (int i = 0; i < num_bases; i++) {
       if (v[i] != o.v[i]) {
@@ -120,7 +122,7 @@ struct MultisetHash {
     }
     return true;
   }
-  /// @brief Negated equality comparison. Complexity: `O(num_bases)`.
+  /// @brief Negated equality comparison. Complexity: \f$O(\texttt{num\_bases})\f$.
   constexpr bool operator!=(const MultisetHash &o) const {
     return !(*this == o);
   }
