@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file pow_mod.hpp
  * @brief Binary exponentiation modulo a positive integer.
@@ -5,8 +7,6 @@
  * Signed bases are normalized into `[0, mod)` first. This helper is intended
  * for the usual contest case `mod >= 2`.
  */
-#pragma once
-
 #include <concepts>
 
 #include "library/internal/concepts.hpp"

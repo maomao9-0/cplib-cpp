@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file multiplicative_function.hpp
  * @brief Helpers for Min_25-style prefix sums of multiplicative functions.
@@ -11,8 +13,6 @@
  * \f$2 \lfloor \sqrt{n} \rfloor\f$ layout correctly; passing an inconsistent
  * buffer shape or wrong prefix sums breaks the formulas.
  */
-#pragma once
-
 #include <cassert>
 #include <concepts>
 #include <vector>

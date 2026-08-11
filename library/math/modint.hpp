@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file modint.hpp
  * @brief Static and dynamic modular integer types.
@@ -6,8 +8,6 @@
  * arithmetic, but inverses require coprime values and the static modulus must
  * be at least `2`.
  */
-#pragma once
-
 #include <cassert>
 #include <concepts>
 #include <iostream>

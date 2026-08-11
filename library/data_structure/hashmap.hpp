@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file hashmap.hpp
  * @brief Fixed-capacity linear-probing hash table
@@ -5,8 +7,6 @@
  * `HashMap` is fast when the load factor stays low, but it has no erase API and
  * can loop forever if `2^LG` is undersized for the number of occupied keys.
  */
-#pragma once
-
 #include <bitset>
 #include <vector>
 

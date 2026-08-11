@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file primality_test.hpp
  * @brief Deterministic Miller-Rabin primality testing for 64-bit unsigned integers.
@@ -5,8 +7,6 @@
  * The provided base sets make `is_prime()` deterministic for unsigned integer
  * types up to 64 bits.
  */
-#pragma once
-
 #include <concepts>
 
 #include "library/internal/type_traits.hpp"

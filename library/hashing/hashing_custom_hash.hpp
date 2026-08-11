@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file hashing_custom_hash.hpp
  * @brief Adapter from library hash objects to standard hash containers.
@@ -6,8 +8,6 @@
  * need a `std::hash`-style wrapper for `unordered_map`, `unordered_set`, or the
  * library `HashMap`.
  */
-#pragma once
-
 #include <type_traits>
 
 #include "library/internal/concepts.hpp"

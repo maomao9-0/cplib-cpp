@@ -1,9 +1,9 @@
+#pragma once
+
 /**
  * @file splitmix.hpp
  * @brief Stateless 64-bit mixing function.
  */
-#pragma once
-
 namespace maomao90 {
 /// @brief Applies the SplitMix64 output permutation to a 64-bit word.
 constexpr unsigned long long splitmix64(unsigned long long x) {

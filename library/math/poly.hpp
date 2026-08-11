@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file poly.hpp
  * @brief Polynomial multiplication helpers backed by NTT and FFT variants.
@@ -6,8 +8,6 @@
  * resulting convolution length must support the required root of unity; the
  * implementation falls back only in the cases encoded below.
  */
-#pragma once
-
 #include <algorithm>
 #include <array>
 #include <bit>

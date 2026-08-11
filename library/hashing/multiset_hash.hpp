@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file multiset_hash.hpp
  * @brief Randomized hash for multisets of signed integer values.
@@ -5,8 +7,6 @@
  * This is useful when multisets need fast equality checks or affine shifts of
  * all values, but the result is still a probabilistic hash.
  */
-#pragma once
-
 #include <array>
 
 #include "library/internal/hashing.hpp"

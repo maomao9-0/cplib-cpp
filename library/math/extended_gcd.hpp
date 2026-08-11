@@ -1,9 +1,9 @@
+#pragma once
+
 /**
  * @file extended_gcd.hpp
  * @brief Extended Euclid helpers for non-negative signed integers.
  */
-#pragma once
-
 #include <cassert>
 #include <concepts>
 #include <utility>
