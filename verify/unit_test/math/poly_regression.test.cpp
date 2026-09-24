@@ -9,6 +9,42 @@ using namespace std;
 #include "library/math/poly.hpp"
 using namespace maomao90;
 
+// Check both the public concept and the class constraint, including failures
+// that must be substitution-friendly rather than hard template errors.
+template <class T, PolySetting setting>
+concept HasPoly = requires { typename Poly<T, setting>; };
+
+template <class T, bool ntt_ok, bool fft_ok, bool split_ok, bool complex_ok>
+constexpr bool backend_matrix() {
+  static_assert(ValidPolySetting<T, PolySetting::ntt> == ntt_ok);
+  static_assert(ValidPolySetting<T, PolySetting::fft> == fft_ok);
+  static_assert(ValidPolySetting<T, PolySetting::fft_sqrt> == split_ok);
+  static_assert(ValidPolySetting<T, PolySetting::fft_complex> == complex_ok);
+  static_assert(HasPoly<T, PolySetting::ntt> == ntt_ok);
+  static_assert(HasPoly<T, PolySetting::fft> == fft_ok);
+  static_assert(HasPoly<T, PolySetting::fft_sqrt> == split_ok);
+  static_assert(HasPoly<T, PolySetting::fft_complex> == complex_ok);
+  return true;
+}
+
+struct NotComplex {
+  using value_type = double;
+};
+static_assert(backend_matrix<static_modint<>, true, false, true, false>());
+static_assert(backend_matrix<dynamic_modint<>, true, false, true, false>());
+static_assert(backend_matrix<long long, true, true, false, false>());
+static_assert(backend_matrix<unsigned long long, true, true, true, false>());
+static_assert(backend_matrix<double, false, true, false, false>());
+static_assert(backend_matrix<complex<double>, false, false, false, true>());
+static_assert(
+    backend_matrix<complex<long double>, false, false, false, true>());
+static_assert(backend_matrix<NotComplex, false, false, false, false>());
+static_assert(backend_matrix<void, false, false, false, false>());
+static_assert(!HasPoly<int, static_cast<PolySetting>(-1)>);
+static_assert(!is_convertible_v<PolySetting, int>);
+static_assert(
+    same_as<Poly<static_modint<>>, Poly<static_modint<>, PolySetting::ntt>>);
+
 void test_negative_fft_convolution() {
   vector<long long> a(61), b(61);
   a[0] = -1;
