@@ -22,7 +22,8 @@
 namespace maomao90 {
 using namespace std;
 /**
- * @brief Lucy DP transform for prime-indexed contributions.
+ * @brief Lucy DP transform of prefix sum of completely multiplicative function
+ * for prime-indexed contributions.
  *
  * Let \f$m = \lfloor \sqrt{n} \rfloor\f$. The input `sumg` has size \f$2m\f$.
  *
@@ -48,7 +49,7 @@ using namespace std;
  * @param n Target upper bound.
  * @param sumg Precomputed prefix sums in the standard Min_25 layout.
  * @param g Function evaluated at primes, where `g(p)` returns the value of
- * \f$g\f$ at a prime \f$p\f$.
+ * \f$g\f$ at a prime \f$p\f$. `g` has to be completely multiplicative.
  * @return Prefix sums with non-prime contributions removed.
  * Complexity: \f$O(n^{3/4} / \log n)\f$.
  * @warning Requires `sumg.size() == 2 * floor(sqrt(n))`.
@@ -83,17 +84,18 @@ vector<T> lucy_dp(long long n, vector<T> sumg, G g) {
     if (!is_prime[prime]) {
       continue;
     }
-    long long prime_squared = (long long)prime * prime, iprime = prime;
-    for (int i = 1; i <= m; i++, iprime += prime) {
-      if (div[i] < prime_squared) {
-        break;
-      }
-      T div_val =
-          iprime <= m ? sumgp[2 * m - iprime] : sumgp[div[i] / prime - 1];
-      sumgp[2 * m - i] -= g(prime) * (div_val - sumgp[prime - 2]);
+    long long prime_squared = (long long)prime * prime;
+    int right = min(m, n / prime_squared);
+    int left = min<long long>(right, m / prime);
+    T prime_value = g(prime), prefix = sumgp[prime - 2];
+    for (int i = 1; i <= left; i++) {
+      sumgp[2 * m - i] -= prime_value * (sumgp[2 * m - i * prime] - prefix);
+    }
+    for (int i = left + 1; i <= right; i++) {
+      sumgp[2 * m - i] -= prime_value * (sumgp[div[i] / prime - 1] - prefix);
     }
     for (int i = m; i >= prime_squared; i--) {
-      sumgp[i - 1] -= g(prime) * (sumgp[i / prime - 1] - sumgp[prime - 2]);
+      sumgp[i - 1] -= prime_value * (sumgp[i / prime - 1] - prefix);
     }
   }
   return sumgp;
@@ -183,7 +185,7 @@ template <typename T, typename F>
     { f(prime, power) } -> same_as<T>;
   } && internal::concepts::Addable<T> && internal::concepts::Subtractable<T> &&
            internal::concepts::Multipliable<T>
-vector<T> min25_sieve(long long n, vector<T> sumfp, F f) {
+vector<T> min25_sieve(long long n, const vector<T> &sumfp, F f) {
   assert(sumfp.size() % 2 == 0);
   long long m = sumfp.size() / 2;
   assert(m * m <= n && (m + 1) * (m + 1) > n);
@@ -211,31 +213,30 @@ vector<T> min25_sieve(long long n, vector<T> sumfp, F f) {
     int pow = 1;
     for (long long prime_pow = prime; div[prime] >= prime_pow;
          prime_pow *= prime, pow++) {
-      for (int i = 1; i <= m; i++) {
-        long long divprime = div[i] / prime_pow;
-        if (divprime < prime) {
-          break;
-        }
-        T div_val = i * prime_pow <= m ? sumf[2 * m - i * prime_pow]
-                                       : sumf[divprime - 1];
+      int right = min(m, n / (prime_pow * prime));
+      int left = min<long long>(right, m / prime_pow);
+      T prime_power_value = f(prime, pow);
+      T next_prime_power_value = f(prime, pow + 1);
+      T prefix = sumfp[prime - 1];
+      for (int i = 1; i <= left; i++) {
         _sumf[2 * m - i] +=
-            f(prime, pow) * (div_val - sumfp[prime - 1]) + f(prime, pow + 1);
+            prime_power_value * (sumf[2 * m - i * prime_pow] - prefix) +
+            next_prime_power_value;
       }
-      for (int i = m; i >= 1; i--) {
-        long long divprime = i / prime_pow;
-        if (divprime < prime) {
-          break;
-        }
-        _sumf[i - 1] += f(prime, pow) * (sumf[divprime - 1] - sumf[prime - 1]) +
-                        f(prime, pow + 1);
+      for (int i = left + 1; i <= right; i++) {
+        _sumf[2 * m - i] +=
+            prime_power_value * (sumf[div[i] / prime_pow - 1] - prefix) +
+            next_prime_power_value;
+      }
+      for (int i = m; i >= prime_pow * prime; i--) {
+        _sumf[i - 1] += prime_power_value * (sumf[i / prime_pow - 1] - prefix) +
+                        next_prime_power_value;
       }
     }
     long long prime_squared = (long long)prime * prime;
     int lim =
         prime_squared <= m ? prime_squared - 1 : 2 * m - n / prime_squared;
-    for (int i = 2 * m - 1; i >= lim; i--) {
-      sumf[i] = _sumf[i];
-    }
+    copy(_sumf.begin() + lim, _sumf.end(), sumf.begin() + lim);
   }
   for (int i = 0; i < 2 * m; i++) {
     sumf[i] += f(1, 0);
