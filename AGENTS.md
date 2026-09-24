@@ -15,6 +15,9 @@ when they improve performance or clarity.
 - Use `@tparam`, `@param`, `@return`, `@pre`, `@throws`, `@note`, and `@see` where
   relevant. State indexing, edge cases, supported types, and numeric limits.
   Keep complexity out of summaries and precondition tags.
+- Use Doxygen LaTeX (`\f$...\f$` inline, `\f[...\f]` for display equations)
+  for mathematical variables, constants, bounds, and formulas. Use backticks for
+  C++ types, identifiers, and expressions; keep code examples as valid C++.
 - `docs/` is deprecated; do not add documentation there. Do not hand-edit
   generated `html/` or `latex/` output.
 - Make unsupported configurations explicit; avoid silent fallbacks that

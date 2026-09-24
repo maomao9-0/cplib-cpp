@@ -6,7 +6,7 @@
  *
  * Coefficients are stored in ascending degree order. Series operations preserve
  * the requested precision (including trailing zeroes); polynomial division
- * normalizes its results. See Poly for representation and backend contracts.
+ * normalizes its results. See `Poly` for representation and backend contracts.
  */
 #include <algorithm>
 #include <array>
@@ -217,17 +217,19 @@ template <StaticModInt mint> void butterfly_inv(vector<mint> &a) {
   }
 }
 /**
- * Extends a butterfly transform from n to 2n evaluations.
+ * Extends a butterfly transform from \f$n\f$ to \f$2n\f$ evaluations.
  *
  * The result is the transform of the original coefficient vector padded to
- * 2n entries. Input and output use butterfly order, not coefficient order.
+ * \f$2n\f$ entries. Input and output use butterfly order, not coefficient
+ * order.
  *
  * Runs in \f$O(n\log n)\f$ time.
  *
  * @tparam mint a static modular integer with a supported prime modulus.
  * @param a the transformed coefficients, extended in place.
  * @pre `a.size()` is a nonzero power of two.
- * @pre `2*a.size()` divides `mint::imod()-1`.
+ * @pre \f$2n \mid p-1\f$, where \f$n\f$ is `a.size()` and \f$p\f$ is
+ * `mint::imod()`.
  */
 template <StaticModInt mint> void ntt_doubling(vector<mint> &a) {
   int n = a.size();
@@ -603,7 +605,7 @@ vector<complex<T>> convolution_complex(vector<complex<T>> a,
 } // namespace fft
 } // namespace internal::poly
 /**
- * Selects the multiplication backend used by Poly.
+ * Selects the multiplication backend used by `Poly`.
  *
  * The NTT backend provides exact modular convolution. Floating-point backends
  * trade precision for speed and require coefficients small enough to avoid
@@ -619,11 +621,11 @@ enum class PolySetting {
  * Checks whether a coefficient type is compatible with a multiplication
  * backend.
  *
- * NTT accepts modular integers or integral types of at most 64 bits. The real
- * FFT accepts arithmetic types, the split FFT accepts modular or unsigned
- * integral types, and the complex FFT accepts std::complex of a floating type.
- * This is a compile-time type check; modulus, length, and precision limits are
- * separate operation contracts documented by Poly.
+ * NTT accepts modular integers or integral types of at most \f$64\f$ bits. The
+ * real FFT accepts arithmetic types, the split FFT accepts modular or unsigned
+ * integral types, and the complex FFT accepts `std::complex` of a floating
+ * type. This is a compile-time type check; modulus, length, and precision
+ * limits are separate operation contracts documented by `Poly`.
  *
  * @tparam T the coefficient type to check.
  * @tparam setting the requested multiplication backend.
@@ -647,39 +649,44 @@ concept ValidPolySetting =
  * A polynomial with arithmetic, evaluation, and formal power series operations.
  *
  * @par Coefficient representation
- * Coefficient i represents the coefficient of \f$x^i\f$. Operations preserve
- * trailing zeroes unless stated otherwise. Both an empty vector and `{0}`
- * represent zero, but equality compares stored vectors. The default constructor
- * stores `{0}`. Use shrink() to obtain an empty representation of zero.
- * `Poly(n)` creates n zero coefficients; `Poly{n}` creates the constant n.
+ * Coefficient \f$i\f$ represents the coefficient of \f$x^i\f$. Operations
+ * preserve trailing zeroes unless stated otherwise. Both an empty vector and
+ * `{0}` represent zero, but equality compares stored vectors. The default
+ * constructor stores `{0}`. Use `shrink()` to obtain an empty representation of
+ * zero. `Poly(n)` creates \f$n\f$ zero coefficients; `Poly{n}` creates the
+ * constant \f$n\f$.
  *
  * @par Series precision
- * Series operations with a precision n return exactly n coefficients, treating
- * missing input terms as zero. The default n=-1 means the stored input size.
- * Precision zero returns an empty result without requiring a particular
- * constant coefficient. Other negative precisions are invalid. Polynomial
- * division via divmod() differs from series division via divide().
+ * Series operations with a precision \f$n\f$ return exactly \f$n\f$
+ * coefficients, treating missing input terms as zero. The default \f$n=-1\f$
+ * means the stored input size. Precision zero returns an empty result without
+ * requiring a particular constant coefficient. Other negative precisions are
+ * invalid. Polynomial division via `divmod()` differs from series division via
+ * `divide()`.
  *
  * @par Coefficient types and multiplication
- * Formal series operations require a static prime modulus at most 2^31-1.
- * Other modular multiplication supports static or dynamic moduli up to 2^31-1;
- * wider moduli throw std::invalid_argument, including for small/empty inputs.
- * The dynamic modulus must remain fixed while its coefficients are in use.
- * Scalar arithmetic is not subject to this convolution restriction.
+ * Formal series operations require a static prime modulus at most
+ * \f$2^{31}-1\f$. Other modular multiplication supports static or dynamic
+ * moduli up to \f$2^{31}-1\f$; wider moduli throw `std::invalid_argument`,
+ * including for small/empty inputs. The dynamic modulus must remain fixed while
+ * its coefficients are in use. Scalar arithmetic is not subject to this
+ * convolution restriction.
  *
  * NTT multiplication uses a quadratic kernel when the shorter input has at most
- * 60 terms, otherwise a radix-4 transform when its length divides modulus-1.
- * Other 32-bit modular products use three-prime CRT, with output length at most
- * 2^24. Direct transforms at modulus 998244353 have length at most 2^23.
- * Integral NTT products require every result to fit in signed 64-bit integers
- * and every intermediate sum in the quadratic kernel to avoid overflow.
- * FFT backends retain floating-point precision limitations.
+ * \f$60\f$ terms, otherwise a radix-\f$4\f$ transform when its length divides
+ * \f$p-1\f$, where \f$p\f$ is the modulus. Other \f$32\f$-bit modular products
+ * use three-prime CRT, with output length at most
+ * \f$2^{24}\f$. Direct transforms at modulus \f$998244353\f$ have length at
+ * most \f$2^{23}\f$. Integral NTT products require every result to fit in
+ * signed \f$64\f$-bit integers and every intermediate sum in the quadratic
+ * kernel to avoid overflow. FFT backends retain floating-point precision
+ * limitations.
  *
  * @par Complexity notation
- * Let s be the stored input size, p the modulus, and M(n) the cost of
- * multiplying two length-n polynomials. Normally \f$M(n)=O(n\log(n+1))\f$.
- * Degree-based bounds treat p as fixed. Additional variables are defined by
- * each operation.
+ * Let \f$s\f$ be the stored input size, \f$p\f$ the modulus, and \f$M(n)\f$ the
+ * cost of multiplying two polynomials of length \f$n\f$. Normally
+ * \f$M(n)=O(n\log(n+1))\f$. Degree-based bounds treat \f$p\f$ as fixed.
+ * Additional variables are defined by each operation.
  *
  * @code{.cpp}
  * using mint = maomao90::static_modint<>;
@@ -706,12 +713,12 @@ struct Poly {
    */
   constexpr Poly() : v(1, 0) {}
   /**
-   * Constructs a polynomial with n stored zero coefficients.
+   * Constructs a polynomial with \f$n\f$ stored zero coefficients.
    *
    * Runs in \f$O(n)\f$ time.
    *
    * @param n the number of coefficients to allocate.
-   * @pre `n >= 0`.
+   * @pre \f$n \ge 0\f$.
    */
   explicit constexpr Poly(int n) { resize(n); }
   /**
@@ -726,7 +733,7 @@ struct Poly {
   /**
    * Constructs a polynomial from an explicit coefficient list.
    *
-   * Runs in \f$O(n)\f$ time for n coefficients.
+   * Runs in \f$O(n)\f$ time for \f$n\f$ coefficients.
    *
    * @param coefficients the coefficients in ascending degree order.
    */
@@ -737,8 +744,8 @@ struct Poly {
    *
    * Runs in \f$O(1)\f$ time.
    *
-   * @return `size()-1`, or -1 for an empty polynomial.
-   * @note Call shrink() first when the mathematical degree is required.
+   * @return \f$s-1\f$, or \f$-1\f$ for an empty polynomial.
+   * @note Call `shrink()` first when the mathematical degree is required.
    */
   constexpr int degree() const { return int(v.size()) - 1; }
   /**
@@ -752,7 +759,7 @@ struct Poly {
    *
    * Runs in \f$O(1)\f$ time.
    *
-   * @return true exactly when `size()==0`; `{0}` is not empty.
+   * @return `true` exactly when `size()==0`; `{0}` is not empty.
    */
   constexpr bool empty() const { return v.empty(); }
   /**
@@ -761,7 +768,7 @@ struct Poly {
    * Runs in \f$O(s+n)\f$ time in the worst case, including reallocation.
    *
    * @param n the new number of coefficients.
-   * @pre `n >= 0`.
+   * @pre \f$n \ge 0\f$.
    */
   constexpr void resize(int n) {
     assert(n >= 0);
@@ -781,7 +788,7 @@ struct Poly {
    *
    * Runs in \f$O(s)\f$ time in the worst case.
    *
-   * @return true when both sizes and all stored coefficients are equal.
+   * @return `true` when both sizes and all stored coefficients are equal.
    */
   constexpr bool operator==(const Poly &) const = default;
   /**
@@ -790,7 +797,7 @@ struct Poly {
    * Runs in \f$O(1)\f$ time.
    *
    * @param i the zero-based coefficient index.
-   * @pre `0 <= i < size()`; missing coefficients are not implicitly accessible.
+   * @pre \f$0 \le i < s\f$; missing coefficients are not implicitly accessible.
    * @return the coefficient value.
    */
   constexpr T operator[](int i) const { return v[i]; }
@@ -800,7 +807,7 @@ struct Poly {
    * Runs in \f$O(1)\f$ time.
    *
    * @param i the zero-based coefficient index.
-   * @pre `0 <= i < size()`.
+   * @pre \f$0 \le i < s\f$.
    * @return a mutable reference to the coefficient.
    */
   constexpr T &operator[](int i) { return v[i]; }
@@ -812,16 +819,17 @@ struct Poly {
    * Multiplies this polynomial by another polynomial in place.
    *
    * Returns an empty polynomial if either input is empty. Otherwise stores
-   * exactly `size()+o.size()-1` coefficients, including trailing zeroes.
+   * exactly \f$s+t-1\f$ coefficients, including trailing zeroes.
    *
-   * Runs in \f$O(M(s+t))\f$ time, where t is the other input's size.
+   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the other input's size.
    *
    * @param o the other factor; may alias this polynomial.
    * @return a reference to this polynomial.
-   * @throws std::invalid_argument if the coefficient modulus exceeds 2^31-1.
-   *     This check precedes all shortcuts and leaves this polynomial unchanged.
+   * @throws std::invalid_argument if the coefficient modulus exceeds
+   * \f$2^{31}-1\f$. This check precedes all shortcuts and leaves this
+   * polynomial unchanged.
    * @pre Inputs satisfy the backend's length, precision, and overflow limits
-   *     described in Poly.
+   *     described in `Poly`.
    */
   constexpr Poly &operator*=(const Poly &o) {
     // Reject unsupported moduli before the empty and quadratic shortcuts.
@@ -883,12 +891,13 @@ struct Poly {
   /**
    * Returns the polynomial product without changing either input.
    *
-   * Runs in \f$O(M(s+t))\f$ time, where t is the other input's size.
+   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the other input's size.
    *
    * @param o the other factor.
    * @return the product, retaining trailing zeroes; empty if either input is
    * empty.
-   * @throws std::invalid_argument if the coefficient modulus exceeds 2^31-1.
+   * @throws std::invalid_argument if the coefficient modulus exceeds
+   * \f$2^{31}-1\f$.
    * @see operator*=(const Poly&)
    */
   constexpr Poly operator*(const Poly &o) const {
@@ -900,10 +909,10 @@ struct Poly {
   /**
    * Adds another polynomial in place, padding the shorter input with zeroes.
    *
-   * Runs in \f$O(s+t)\f$ time, where t is the other input's size.
+   * Runs in \f$O(s+t)\f$ time, where \f$t\f$ is the other input's size.
    *
    * @param other the polynomial to add; may alias this polynomial.
-   * @return a reference to this polynomial, with max(s,t) stored terms.
+   * @return a reference to this polynomial, with \f$\max(s,t)\f$ stored terms.
    */
   constexpr Poly &operator+=(const Poly &other) {
     if (size() < other.size())
@@ -916,10 +925,10 @@ struct Poly {
    * Subtracts another polynomial in place, padding the shorter input with
    * zeroes.
    *
-   * Runs in \f$O(s+t)\f$ time, where t is the other input's size.
+   * Runs in \f$O(s+t)\f$ time, where \f$t\f$ is the other input's size.
    *
    * @param other the polynomial to subtract; may alias this polynomial.
-   * @return a reference to this polynomial, with max(s,t) stored terms.
+   * @return a reference to this polynomial, with \f$\max(s,t)\f$ stored terms.
    */
   constexpr Poly &operator-=(const Poly &other) {
     if (size() < other.size())
@@ -947,7 +956,7 @@ struct Poly {
    * Runs in \f$O(s+\log p)\f$ time.
    *
    * @param scalar the divisor.
-   * @pre `scalar` is invertible modulo p.
+   * @pre `scalar` is invertible modulo \f$p\f$.
    * @return a reference to this polynomial, with its stored size preserved.
    */
   constexpr Poly &operator/=(T scalar)
@@ -959,10 +968,10 @@ struct Poly {
   /**
    * Returns the sum, padding the shorter input with zeroes.
    *
-   * Runs in \f$O(s+t)\f$ time, where t is the other input's size.
+   * Runs in \f$O(s+t)\f$ time, where \f$t\f$ is the other input's size.
    *
    * @param other the polynomial to add.
-   * @return the sum with max(s,t) stored coefficients.
+   * @return the sum with \f$\max(s,t)\f$ stored coefficients.
    */
   constexpr Poly operator+(const Poly &other) const {
     Poly result(*this);
@@ -972,10 +981,10 @@ struct Poly {
   /**
    * Returns the difference, padding the shorter input with zeroes.
    *
-   * Runs in \f$O(s+t)\f$ time, where t is the other input's size.
+   * Runs in \f$O(s+t)\f$ time, where \f$t\f$ is the other input's size.
    *
    * @param other the polynomial to subtract.
-   * @return the difference with max(s,t) stored coefficients.
+   * @return the difference with \f$\max(s,t)\f$ stored coefficients.
    */
   constexpr Poly operator-(const Poly &other) const {
     Poly result(*this);
@@ -1011,7 +1020,7 @@ struct Poly {
   /**
    * Returns a scalar multiple with the scalar on the left.
    *
-   * Runs in \f$O(n)\f$ time, where n is the polynomial's size.
+   * Runs in \f$O(n)\f$ time, where \f$n\f$ is the polynomial's size.
    *
    * @param scalar the multiplier.
    * @param p the polynomial to scale.
@@ -1027,7 +1036,7 @@ struct Poly {
    * Runs in \f$O(s+\log p)\f$ time.
    *
    * @param scalar the divisor.
-   * @pre `scalar` is invertible modulo p.
+   * @pre `scalar` is invertible modulo \f$p\f$.
    * @return the scaled polynomial with the same stored size.
    */
   constexpr Poly operator/(T scalar) const
@@ -1061,8 +1070,8 @@ struct Poly {
    * Runs in \f$O(\min(n,s))\f$ time.
    *
    * @param n the maximum number of coefficients to copy.
-   * @pre `n >= 0`.
-   * @return the first `min(n,size())` coefficients.
+   * @pre \f$n \ge 0\f$.
+   * @return the first \f$\min(n,s)\f$ coefficients.
    * @see truncated()
    */
   Poly pre(int n) const {
@@ -1070,13 +1079,13 @@ struct Poly {
     return vector<T>(v.begin(), v.begin() + min(n, size()));
   }
   /**
-   * Copies the series to exactly n coefficients, truncating or padding.
+   * Copies the series to exactly \f$n\f$ coefficients, truncating or padding.
    *
    * Runs in \f$O(n)\f$ time.
    *
    * @param n the requested number of coefficients.
-   * @pre `n >= 0`.
-   * @return the first n coefficients, with missing terms set to zero.
+   * @pre \f$n \ge 0\f$.
+   * @return the first \f$n\f$ coefficients, with missing terms set to zero.
    * @see pre()
    */
   Poly truncated(int n) const {
@@ -1098,7 +1107,7 @@ struct Poly {
    * Runs in \f$O(s)\f$ time.
    *
    * @param x the evaluation point.
-   * @return the value f(x); zero for an empty polynomial.
+   * @return the value \f$f(x)\f$; zero for an empty polynomial.
    */
   T eval(T x) const {
     T result = 0;
@@ -1107,15 +1116,15 @@ struct Poly {
     return result;
   }
   /**
-   * Multiplies by the linear factor ax+b in place.
+   * Multiplies by the linear factor \f$ax+b\f$ in place.
    *
    * The stored size increases by one, including when the input is zero.
    *
    * Runs in \f$O(s)\f$ time.
    *
-   * @param a the coefficient of x in the factor.
+   * @param a the coefficient of \f$x\f$ in the factor.
    * @param b the constant coefficient of the factor.
-   * @pre `a != 0`.
+   * @pre \f$a \ne 0\f$.
    */
   void multiply(T a, T b) {
     assert(a != T(0));
@@ -1127,17 +1136,18 @@ struct Poly {
     }
   }
   /**
-   * Divides exactly by the linear factor ax+b in place.
+   * Divides exactly by the linear factor \f$ax+b\f$ in place.
    *
    * The stored size decreases by one. This operation requires a zero remainder;
-   * use divmod() when the factor need not divide exactly. A zero b is allowed.
+   * use `divmod()` when the factor need not divide exactly. \f$b=0\f$ is
+   * allowed.
    *
    * Runs in \f$O(s+\log p)\f$ time.
    *
-   * @param a the coefficient of x in the divisor.
+   * @param a the coefficient of \f$x\f$ in the divisor.
    * @param b the constant coefficient of the divisor.
-   * @pre The input is nonempty and a is invertible modulo p.
-   * @pre ax+b divides the input polynomial exactly.
+   * @pre The input is nonempty and \f$a\f$ is invertible modulo \f$p\f$.
+   * @pre \f$ax+b\f$ divides the input polynomial exactly.
    */
   void divide(T a, T b)
     requires ModInt<T>
@@ -1162,8 +1172,8 @@ struct Poly {
    *
    * Runs in \f$O(s)\f$ time.
    *
-   * @return f'(x) with `max(0,size()-1)` stored terms. Constants and empty
-   *     inputs both yield an empty polynomial.
+   * @return \f$f'(x)\f$ with \f$\max(0,s-1)\f$ stored terms. Constants and
+   * empty inputs both yield an empty polynomial.
    */
   Poly differ() const {
     Poly result(max(0, size() - 1));
@@ -1178,9 +1188,10 @@ struct Poly {
    *
    * Runs in \f$O(s)\f$ time.
    *
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `size() < p`, so all required denominators are invertible.
-   * @return the integral with `size()+1` stored terms; `{0}` for empty input.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$s < p\f$, so all required denominators are invertible.
+   * @return the integral with \f$s+1\f$ stored terms; `{0}` for empty input.
    */
   Poly integral() const
     requires StaticModInt<T>
@@ -1197,18 +1208,20 @@ struct Poly {
   /// @name Formal power series
   /// @{
   /**
-   * Computes the reciprocal series modulo x^n using Newton doubling.
+   * Computes the reciprocal series modulo \f$x^n\f$ using Newton doubling.
    *
    * When a direct NTT is available, only the unknown high half is computed and
    * the inverse's transform is reused. Other moduli use convolution doubling.
    *
    * Runs in \f$O(M(n))\f$ time.
    *
-   * @param n the number of output coefficients; -1 means `size()`.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `n >= -1`; for positive resolved precision, the input is nonempty
+   * @param n the number of output coefficients; \f$-1\f$ means `size()`.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$n \ge -1\f$; for positive resolved precision, the input is nonempty
    *     and its constant coefficient is nonzero.
-   * @return exactly n coefficients of 1/f, or an empty polynomial when n=0.
+   * @return exactly \f$n\f$ coefficients of \f$1/f\f$, or an empty polynomial
+   * when \f$n=0\f$.
    */
   Poly inv(int n = -1) const
     requires StaticModInt<T>
@@ -1250,18 +1263,21 @@ struct Poly {
     return result;
   }
   /**
-   * Divides as a formal power series modulo x^n.
+   * Divides as a formal power series modulo \f$x^n\f$.
    *
    * This computes a truncated series, not a polynomial quotient and remainder.
    *
    * Runs in \f$O(M(n))\f$ time.
    *
    * @param denominator the divisor series.
-   * @param n the number of output coefficients; -1 means the numerator's size.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `n >= -1`; for positive resolved precision, denominator is nonempty
-   *     and `denominator[0] != 0`.
-   * @return exactly n coefficients of f/denominator.
+   * @param n the number of output coefficients; \f$-1\f$ means the numerator's
+   * size.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$n \ge -1\f$; for positive resolved precision, `denominator` is
+   * nonempty and `denominator[0] != 0`.
+   * @return exactly \f$n\f$ coefficients of \f$f/g\f$, where \f$g\f$ is
+   * `denominator`.
    * @see divmod()
    */
   Poly divide(const Poly &denominator, int n = -1) const
@@ -1276,9 +1292,11 @@ struct Poly {
    * Runs in \f$O(M(n))\f$ time.
    *
    * @param denominator the divisor series; may alias this polynomial.
-   * @param n the output precision; -1 means this polynomial's original size.
-   * @pre The coefficient field, precision, and divisor satisfy divide().
-   * @return a reference to this polynomial with exactly n stored coefficients.
+   * @param n the output precision; \f$-1\f$ means this polynomial's original
+   * size.
+   * @pre The coefficient field, precision, and divisor satisfy `divide()`.
+   * @return a reference to this polynomial with exactly \f$n\f$ stored
+   * coefficients.
    * @see divide(const Poly&, int)
    */
   Poly &divide_in_place(const Poly &denominator, int n = -1)
@@ -1287,17 +1305,19 @@ struct Poly {
     return *this = divide(denominator, n);
   }
   /**
-   * Computes the formal logarithm modulo x^n.
+   * Computes the formal logarithm modulo \f$x^n\f$.
    *
-   * Uses the identity (log f)'=f'/f and sets the constant term to zero.
+   * Uses the identity \f$(\log f)'=f'/f\f$ and sets the constant term to zero.
    *
    * Runs in \f$O(M(n))\f$ time.
    *
-   * @param n the number of output coefficients; -1 means `size()`.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `n >= -1` and the resolved precision is at most p.
-   * @pre For positive precision, the input is nonempty and `f[0] == 1`.
-   * @return exactly n coefficients of log(f), with constant coefficient zero.
+   * @param n the number of output coefficients; \f$-1\f$ means `size()`.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$n \ge -1\f$ and the resolved precision is at most \f$p\f$.
+   * @pre For positive precision, the input is nonempty and \f$f(0)=1\f$.
+   * @return exactly \f$n\f$ coefficients of \f$\log f\f$, with constant
+   * coefficient zero.
    */
   Poly log(int n = -1) const
     requires StaticModInt<T>
@@ -1309,18 +1329,20 @@ struct Poly {
     return (pre(n).differ() * inv(n - 1)).truncated(n - 1).integral();
   }
   /**
-   * Computes the formal exponential modulo x^n.
+   * Computes the formal exponential modulo \f$x^n\f$.
    *
    * Empty input is treated as zero, whose exponential is one. The direct NTT
    * path maintains the exponential and its inverse, reusing their transforms.
    *
    * Runs in \f$O(M(n))\f$ time.
    *
-   * @param n the number of output coefficients; -1 means `size()`.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `n >= -1` and the resolved precision is at most p.
-   * @pre For positive precision, the input is empty or `f[0] == 0`.
-   * @return exactly n coefficients of exp(f); the constant is one when n>0.
+   * @param n the number of output coefficients; \f$-1\f$ means `size()`.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$n \ge -1\f$ and the resolved precision is at most \f$p\f$.
+   * @pre For positive precision, the input is empty or \f$f(0)=0\f$.
+   * @return exactly \f$n\f$ coefficients of \f$\exp f\f$; the constant is one
+   * when \f$n>0\f$.
    */
   Poly exp(int n = -1) const
     requires StaticModInt<T>
@@ -1399,19 +1421,21 @@ struct Poly {
     return f;
   }
   /**
-   * Raises the series to a nonnegative integer power modulo x^n.
+   * Raises the series to a nonnegative integer power modulo \f$x^n\f$.
    *
    * Leading zeroes are factored out before applying logarithm and exponential.
-   * Defines f^0=1, including 0^0, and supports signed 64-bit exponents without
-   * overflowing the degree shift.
+   * Defines \f$f^0=1\f$, including \f$0^0\f$, and supports signed \f$64\f$-bit
+   * exponents without overflowing the degree shift.
    *
    * Runs in \f$O(s+M(n)+\log(k+1))\f$ time.
    *
    * @param k the exponent.
-   * @param n the number of output coefficients; -1 means `size()`.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `k >= 0`, `n >= -1`, and the resolved precision is at most p.
-   * @return exactly n coefficients of f^k.
+   * @param n the number of output coefficients; \f$-1\f$ means `size()`.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$k \ge 0\f$, \f$n \ge -1\f$, and the resolved precision is at most
+   * \f$p\f$.
+   * @return exactly \f$n\f$ coefficients of \f$f^k\f$.
    * @see sparse_pow()
    */
   Poly pow(long long k, int n = -1) const
@@ -1440,19 +1464,22 @@ struct Poly {
     return result;
   }
   /**
-   * Raises a sparse series to a nonnegative integer power modulo x^n.
+   * Raises a sparse series to a nonnegative integer power modulo \f$x^n\f$.
    *
-   * Uses f*g'=k*f'*g to compute g=f^k from the nonzero input coefficients.
-   * Input and output still use dense vectors. Defines f^0=1, including 0^0.
+   * Uses \f$fg'=kf'g\f$ to compute \f$g=f^k\f$ from the nonzero input
+   * coefficients. Input and output still use dense vectors. Defines
+   * \f$f^0=1\f$, including \f$0^0\f$.
    *
-   * Runs in \f$O(s+n(t+1)+\log(k+1))\f$ time, where t is the number of
+   * Runs in \f$O(s+n(t+1)+\log(k+1))\f$ time, where \f$t\f$ is the number of
    * relevant nonzero input coefficients after removing the leading zeroes.
    *
    * @param k the exponent.
-   * @param n the number of output coefficients; -1 means `size()`.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `k >= 0`, `n >= -1`, and the resolved precision is at most p.
-   * @return exactly n coefficients of f^k.
+   * @param n the number of output coefficients; \f$-1\f$ means `size()`.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$k \ge 0\f$, \f$n \ge -1\f$, and the resolved precision is at most
+   * \f$p\f$.
+   * @return exactly \f$n\f$ coefficients of \f$f^k\f$.
    * @see pow()
    */
   Poly sparse_pow(long long k, int n = -1) const
@@ -1500,13 +1527,15 @@ struct Poly {
    * Computes the polynomial quotient and remainder.
    *
    * Removes trailing zeroes from the inputs before division. The results
-   * satisfy f=q*divisor+r and either r is zero or deg(r)<deg(divisor).
+   * satisfy \f$f=qg+r\f$, where \f$g\f$ is `divisor`, and either \f$r=0\f$ or
+   * \f$\deg r < \deg g\f$.
    * Both results are normalized: zero is represented by an empty vector.
    *
-   * Runs in \f$O(M(s+t))\f$ time, where t is the divisor's stored size.
+   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the divisor's stored size.
    *
    * @param divisor the polynomial divisor; trailing zeroes are allowed.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
    * @pre The divisor has at least one nonzero coefficient.
    * @return a pair containing the quotient and remainder, in that order.
    * @see divide(const Poly&, int)
@@ -1546,10 +1575,10 @@ struct Poly {
   /**
    * Computes the polynomial quotient, discarding the remainder.
    *
-   * Runs in \f$O(M(s+t))\f$ time, where t is the divisor's stored size.
+   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the divisor's stored size.
    *
    * @param divisor the polynomial divisor.
-   * @pre The coefficient field and nonzero divisor satisfy divmod().
+   * @pre The coefficient field and nonzero divisor satisfy `divmod()`.
    * @return the normalized quotient; empty when its value is zero.
    * @see divmod()
    */
@@ -1561,10 +1590,10 @@ struct Poly {
   /**
    * Returns the polynomial quotient, not a truncated series quotient.
    *
-   * Runs in \f$O(M(s+t))\f$ time, where t is the divisor's stored size.
+   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the divisor's stored size.
    *
    * @param divisor the polynomial divisor.
-   * @pre The coefficient field and nonzero divisor satisfy divmod().
+   * @pre The coefficient field and nonzero divisor satisfy `divmod()`.
    * @return the normalized quotient.
    * @see divide(const Poly&, int)
    */
@@ -1576,10 +1605,10 @@ struct Poly {
   /**
    * Returns the remainder of polynomial division.
    *
-   * Runs in \f$O(M(s+t))\f$ time, where t is the divisor's stored size.
+   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the divisor's stored size.
    *
    * @param divisor the polynomial divisor.
-   * @pre The coefficient field and nonzero divisor satisfy divmod().
+   * @pre The coefficient field and nonzero divisor satisfy `divmod()`.
    * @return the normalized remainder, of degree less than the divisor.
    * @see divmod()
    */
@@ -1593,10 +1622,12 @@ struct Poly {
    *
    * Runs in \f$O(M(s))\f$ time.
    *
-   * @param c the shift applied to x.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `size() <= p`, so the required factorials are invertible.
-   * @return f(x+c) with the original stored size, including trailing zeroes.
+   * @param c the shift applied to \f$x\f$.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$s \le p\f$, so the required factorials are invertible.
+   * @return \f$f(x+c)\f$ with the original stored size, including trailing
+   * zeroes.
    */
   Poly taylor_shift(T c) const
     requires StaticModInt<T>
@@ -1629,12 +1660,14 @@ struct Poly {
    *
    * Repeated evaluation points are allowed and retain their input order.
    *
-   * Runs in \f$O(M(s)+M(m)\log(m+1))\f$ time for m points, using
+   * Runs in \f$O(M(s)+M(m)\log(m+1))\f$ time for \f$m\f$ points, using
    * \f$O(s+m\log(m+1))\f$ auxiliary space.
    *
    * @param xs the evaluation points.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @return the vector `{f(xs[0]), ..., f(xs[m-1])}`; empty for no points.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @return the vector \f$(f(x_0),\ldots,f(x_{m-1}))\f$, where \f$x_i\f$ is
+   * `xs[i]`; empty for no points.
    */
   vector<T> multipoint_eval(const vector<T> &xs) const
     requires StaticModInt<T>
@@ -1668,14 +1701,17 @@ struct Poly {
    *
    * Uses a product tree and batch inversion of the derivative evaluations.
    *
-   * Runs in \f$O(M(m)\log(m+1))\f$ time for m points, using
+   * Runs in \f$O(M(m)\log(m+1))\f$ time for \f$m\f$ points, using
    * \f$O(m\log(m+1))\f$ auxiliary space.
    *
    * @param xs the interpolation points.
    * @param ys the polynomial values at the corresponding points.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `xs.size() == ys.size()` and the xs are pairwise distinct modulo p.
-   * @return exactly m coefficients satisfying `f(xs[i]) == ys[i]`; empty
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre `xs.size() == ys.size()` and the elements of `xs` are pairwise
+   * distinct modulo \f$p\f$.
+   * @return exactly \f$m\f$ coefficients satisfying \f$f(x_i)=y_i\f$, where
+   *     \f$x_i\f$ is `xs[i]` and \f$y_i\f$ is `ys[i]`; empty
    *     when no points are supplied.
    * @see multipoint_eval()
    */
@@ -1712,20 +1748,22 @@ struct Poly {
   /// @name Square roots and rational series coefficients
   /// @{
   /**
-   * Computes a formal square root modulo x^n, if one exists.
+   * Computes a formal square root modulo \f$x^n\f$, if one exists.
    *
    * Uses Tonelli-Shanks for the first nonzero coefficient and Newton doubling
    * for the remaining series. Either sign is valid. Any high coefficients left
-   * undetermined by a leading power of x are set to zero.
+   * undetermined by a leading power of \f$x\f$ are set to zero.
    *
    * Runs in \f$O(M(n))\f$ time plus one scalar Tonelli-Shanks square root.
    *
-   * @param n the number of output coefficients; -1 means `size()`.
-   * @pre T is a static modular integer with an odd prime modulus p <= 2^31-1.
-   * @pre `n >= -1` and the resolved precision is at most p.
-   * @return a series g with exactly n terms satisfying g*g=f modulo x^n, or
-   *     std::nullopt if the first nonzero term below n has odd degree or a
-   *     nonsquare coefficient. A zero input modulo x^n yields n zeroes.
+   * @param n the number of output coefficients; \f$-1\f$ means `size()`.
+   * @pre `T` is a static modular integer with an odd prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$n \ge -1\f$ and the resolved precision is at most \f$p\f$.
+   * @return a series \f$g\f$ with exactly \f$n\f$ terms satisfying
+   * \f$g^2\equiv f\pmod{x^n}\f$, or `std::nullopt` if the first nonzero term of
+   * degree below \f$n\f$ has odd degree or a nonsquare coefficient. A zero
+   * input modulo \f$x^n\f$ yields \f$n\f$ zeroes.
    */
   optional<Poly> sqrt(int n = -1) const
     requires StaticModInt<T>
@@ -1764,15 +1802,17 @@ struct Poly {
    * polynomial part is handled first. For large inputs with a suitable NTT,
    * parity elimination and transform doubling reuse evaluations across steps.
    *
-   * Runs in \f$O(M(d)\log(k+2))\f$ time, where d is the larger stored
+   * Runs in \f$O(M(d)\log(k+2))\f$ time, where \f$d\f$ is the larger stored
    * input size.
    *
    * @param k the zero-based index of the coefficient to extract.
    * @param numerator the numerator polynomial, consumed by value.
    * @param denominator the denominator polynomial, consumed by value.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `k >= 0`; denominator is nonempty and `denominator[0] != 0`.
-   * @return the coefficient of x^k in numerator/denominator.
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre \f$k \ge 0\f$; `denominator` is nonempty and `denominator[0] != 0`.
+   * @return the coefficient \f$[x^k]\,P(x)/Q(x)\f$, where \f$P\f$ is
+   * `numerator` and \f$Q\f$ is `denominator`.
    * @see linear_recurrence()
    */
   static T bostan_mori(long long k, Poly numerator, Poly denominator)
@@ -1862,19 +1902,24 @@ struct Poly {
   /**
    * Computes a term of a sequence defined by a linear recurrence.
    *
-   * With d initial terms, the convention is
-   * `a[i] = recurrence[0]*a[i-1] + ... + recurrence[d-1]*a[i-d]` for i>=d.
-   * For example, `linear_recurrence({0,1}, {1,1}, k)` returns Fibonacci(k).
+   * With \f$d\f$ initial terms and \f$c_j\f$ equal to `recurrence[j]`, the
+   * convention is
+   * \f[
+   *   a_i=\sum_{j=0}^{d-1}c_j a_{i-1-j},\qquad i\ge d.
+   * \f]
+   * For example, `linear_recurrence({0,1}, {1,1}, k)` returns \f$F_k\f$, the
+   * \f$k\f$-th Fibonacci number.
    *
    * Runs in \f$O(M(d)\log(k+2))\f$ time; returns in \f$O(1)\f$ time
-   * when k refers to an initial term.
+   * when \f$k\f$ refers to an initial term.
    *
-   * @param initial the values a[0], ..., a[d-1].
+   * @param initial the values \f$a_0,\ldots,a_{d-1}\f$.
    * @param recurrence the coefficients in order of increasing lag.
    * @param k the zero-based index of the requested term.
-   * @pre T is a static modular integer with prime modulus p <= 2^31-1.
-   * @pre `initial.size() == recurrence.size() > 0` and `k >= 0`.
-   * @return a[k].
+   * @pre `T` is a static modular integer with prime modulus \f$p \le
+   * 2^{31}-1\f$.
+   * @pre `initial.size() == recurrence.size() > 0` and \f$k \ge 0\f$.
+   * @return \f$a_k\f$.
    * @see bostan_mori()
    */
   static T linear_recurrence(const vector<T> &initial,
