@@ -1,0 +1,98 @@
+/*
+ * Compatibility rules for Doxygen 1.14+.
+ *
+ * doxygen-awesome.css provides the page theme.  Recent Doxygen releases add
+ * inline-code and callout styles after the selectors that stylesheet covers;
+ * keep those elements on the same colour tokens as the rest of the theme.
+ */
+
+span.tt {
+    display: inline;
+    padding: 2px 6px;
+    border: 1px solid var(--separator-color);
+    border-radius: var(--border-radius-small);
+    background: var(--code-background);
+    color: var(--code-foreground);
+    font-family: var(--font-family-monospace);
+    font-size: var(--code-font-size);
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+dl.warning,
+dl.attention,
+dl.important {
+    background: var(--warning-color);
+    border-left-color: var(--warning-color-dark);
+    color: var(--warning-color-darker);
+}
+
+dl.warning dt,
+dl.attention dt,
+dl.important dt {
+    color: var(--warning-color-dark);
+}
+
+dl.note,
+dl.remark {
+    background: var(--note-color);
+    border-left-color: var(--note-color-dark);
+    color: var(--note-color-darker);
+}
+
+dl.note dt,
+dl.remark dt {
+    color: var(--note-color-dark);
+}
+
+dl.todo,
+dl.test {
+    background: var(--todo-color);
+    border-left-color: var(--todo-color-dark);
+    color: var(--todo-color-darker);
+}
+
+dl.todo dt,
+dl.test dt {
+    color: var(--todo-color-dark);
+}
+
+dl.bug dt a {
+    color: var(--bug-color-dark) !important;
+}
+
+dl.warning .tt,
+dl.attention .tt,
+dl.important .tt {
+    background: color-mix(in srgb, var(--warning-color-darker) 12%, var(--warning-color));
+    border-color: color-mix(in srgb, var(--warning-color-darker) 24%, var(--warning-color));
+}
+
+dl.note .tt,
+dl.remark .tt {
+    background: color-mix(in srgb, var(--note-color-darker) 12%, var(--note-color));
+    border-color: color-mix(in srgb, var(--note-color-darker) 24%, var(--note-color));
+}
+
+dl.todo .tt,
+dl.test .tt {
+    background: color-mix(in srgb, var(--todo-color-darker) 12%, var(--todo-color));
+    border-color: color-mix(in srgb, var(--todo-color-darker) 24%, var(--todo-color));
+}
+
+dl.bug .tt {
+    background: color-mix(in srgb, var(--bug-color-darker) 12%, var(--bug-color));
+    border-color: color-mix(in srgb, var(--bug-color-darker) 24%, var(--bug-color));
+}
+
+dl.deprecated .tt {
+    background: color-mix(in srgb, var(--deprecated-color-darker) 12%, var(--deprecated-color));
+    border-color: color-mix(in srgb, var(--deprecated-color-darker) 24%, var(--deprecated-color));
+}
+
+dl.invariant .tt,
+dl.pre .tt,
+dl.post .tt {
+    background: color-mix(in srgb, var(--invariant-color-darker) 12%, var(--invariant-color));
+    border-color: color-mix(in srgb, var(--invariant-color-darker) 24%, var(--invariant-color));
+}
