@@ -1,0 +1,10 @@
+# Generated documentation
+/html/
+/latex/
+
+# online-judge-verify-helper generated state
+**/.verify-helper/cache/
+**/.verify-helper/include/
+**/.verify-helper/markdown/
+**/.verify-helper/timestamps.local.json
+**/.verify-helper/timestamps.remote.json
