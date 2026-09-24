@@ -34,7 +34,7 @@ html {
     --side-nav-fixed-width: 335px;
     --menu-display: none;
 
-    --top-height: 120px;
+    --top-height: 140px;
     --toc-sticky-top: -25px;
     --toc-max-height: calc(100vh - 2 * var(--spacing-medium) - 25px);
 }
@@ -101,12 +101,34 @@ html {
         margin-left: var(--side-nav-fixed-width) !important;
     }
 
+    /* Doxygen puts the search box in a second table cell next to the project
+     * title. Stack the cells in the sidebar so the search box follows the
+     * project brief instead of competing with it for horizontal space. */
+    #titlearea table,
+    #titlearea table tbody,
+    #titlearea table tbody tr {
+        display: block;
+        width: 100%;
+    }
+
+    #projectrow > td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #projectrow > td + td {
+        padding: var(--spacing-medium) var(--spacing-large) 0;
+    }
+
     #MSearchBox {
-        width: calc(var(--side-nav-fixed-width) - calc(2 * var(--spacing-medium)));
+        width: calc(var(--side-nav-fixed-width) - var(--spacing-large) - var(--spacing-large) - 10px);
+        box-sizing: border-box;
+        margin-left: calc(var(--spacing-large) + 5px);
     }
 
     #MSearchField {
-        width: calc(var(--side-nav-fixed-width) - calc(2 * var(--spacing-medium)) - 65px);
+        width: calc(100% - 65px);
     }
 
     #MSearchResultsWindow {
