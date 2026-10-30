@@ -1,5 +1,6 @@
 #define PROBLEM "https://judge.yosupo.jp/problem/aplusb"
 
+#include <algorithm>
 #include <cassert>
 #include <complex>
 #include <iostream>
@@ -45,6 +46,30 @@ static_assert(!is_convertible_v<PolySetting, int>);
 static_assert(
     same_as<Poly<static_modint<>>, Poly<static_modint<>, PolySetting::ntt>>);
 
+void test_integral_ntt_convolution() {
+  // Small inputs take the quadratic kernel inside convolution_ll.
+  Poly<long long, PolySetting::ntt> a{3, -2, 1}, b{1, 4},
+      expected_small{3, 10, -7, 4};
+  assert(a * b == expected_small);
+
+  // Larger inputs take three-prime NTT reconstruction, including negative
+  // and mixed-sign coefficients.
+  Poly<long long, PolySetting::ntt> p(100), q(100);
+  for (int i = 0; i < 100; ++i) {
+    p[i] = (long long)i * i - 7;
+    q[i] = 1000 - 3 * i;
+  }
+  auto r = p * q;
+  assert(r.size() == 199);
+  for (int k = 0; k < (int)r.size(); ++k) {
+    long long expected = 0;
+    for (int i = max(0, k - 99); i <= min(k, 99); ++i) {
+      expected += p[i] * q[k - i];
+    }
+    assert(r[k] == expected);
+  }
+}
+
 void test_negative_fft_convolution() {
   vector<long long> a(61), b(61);
   a[0] = -1;
@@ -61,9 +86,9 @@ void test_negative_fft_convolution() {
   p[0] = -1;
   q[0] = 1;
   auto r = p * q;
-  assert(r.degree() == 120);
+  assert(r.size() == 121);
   assert(r[0] == -1);
-  for (int i = 1; i <= r.degree(); i++) {
+  for (int i = 1; i < (int)r.size(); i++) {
     assert(r[i] == 0);
   }
 }
@@ -94,13 +119,14 @@ void test_fft_complex_poly() {
   b[1] = cd(4.0, 3.0);
 
   auto c = a * b;
-  assert(c.degree() == 2);
+  assert(c.size() == 3);
   assert(abs(c[0] - a[0] * b[0]) < 1e-9);
   assert(abs(c[1] - (a[0] * b[1] + a[1] * b[0])) < 1e-9);
   assert(abs(c[2] - a[1] * b[1]) < 1e-9);
 }
 
 int main() {
+  test_integral_ntt_convolution();
   test_negative_fft_convolution();
   test_unsigned_fft_sqrt_convolution();
   test_fft_complex_poly();

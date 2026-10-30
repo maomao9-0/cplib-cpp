@@ -15,8 +15,6 @@
 #include <complex>
 #include <concepts>
 #include <initializer_list>
-#include <optional>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -648,13 +646,18 @@ concept ValidPolySetting =
 /**
  * A polynomial with arithmetic, evaluation, and formal power series operations.
  *
+ * `Poly` publicly derives from `std::vector<T>` storing the coefficients in
+ * ascending degree order: `f[i]` is the coefficient of \f$x^i\f$. All vector
+ * operations — iterators, `size()`, `resize()`, `push_back()`, range-based
+ * loops, and so on — are directly available on a `Poly`.
+ *
  * @par Coefficient representation
  * Coefficient \f$i\f$ represents the coefficient of \f$x^i\f$. Operations
  * preserve trailing zeroes unless stated otherwise. Both an empty vector and
- * `{0}` represent zero, but equality compares stored vectors. The default
- * constructor stores `{0}`. Use `shrink()` to obtain an empty representation of
- * zero. `Poly(n)` creates \f$n\f$ zero coefficients; `Poly{n}` creates the
- * constant \f$n\f$.
+ * `{0}` represent zero, but equality compares the stored coefficients. The
+ * default constructor is empty. Use `shrink()` to obtain the empty
+ * representation of a zero polynomial. `Poly(n)` creates \f$n\f$ zero
+ * coefficients; `Poly{n}` creates the constant \f$n\f$.
  *
  * @par Series precision
  * Series operations with a precision \f$n\f$ return exactly \f$n\f$
@@ -667,10 +670,10 @@ concept ValidPolySetting =
  * @par Coefficient types and multiplication
  * Formal series operations require a static prime modulus at most
  * \f$2^{31}-1\f$. Other modular multiplication supports static or dynamic
- * moduli up to \f$2^{31}-1\f$; wider moduli throw `std::invalid_argument`,
- * including for small/empty inputs. The dynamic modulus must remain fixed while
- * its coefficients are in use. Scalar arithmetic is not subject to this
- * convolution restriction.
+ * moduli up to \f$2^{31}-1\f$; `operator*` and `operator*=` are constrained
+ * away at compile time for wider moduli, including for small/empty inputs. The
+ * dynamic modulus must remain fixed while its coefficients are in use. Scalar
+ * arithmetic is not subject to this convolution restriction.
  *
  * NTT multiplication uses a quadratic kernel when the shorter input has at most
  * \f$60\f$ terms, otherwise a radix-\f$4\f$ transform when its length divides
@@ -695,6 +698,7 @@ concept ValidPolySetting =
  * auto inverse = f.inv(100);          // 1/f modulo x^100
  * auto recovered = f.log(100).exp();  // f padded to 100 coefficients
  * auto [q, r] = f.divmod(poly{1, 1});
+ * f.resize(200);                      // vector operations work directly
  * @endcode
  *
  * @tparam T the coefficient type, compatible with the selected backend.
@@ -703,114 +707,33 @@ concept ValidPolySetting =
  */
 template <typename T, PolySetting poly_setting = PolySetting::ntt>
   requires ValidPolySetting<T, poly_setting>
-struct Poly {
-  /// @name Construction and coefficient storage
+struct Poly : vector<T> {
+  /// @name Construction
   /// @{
   /**
-   * Constructs the zero polynomial with one stored zero coefficient.
-   *
-   * Runs in \f$O(1)\f$ time.
+   * Inherits every `std::vector<T>` constructor: default construction is
+   * empty, `Poly(n)` stores \f$n\f$ zero coefficients, `Poly(n, c)` stores
+   * \f$n\f$ copies of \f$c\f$, `Poly{...}` lists coefficients in ascending
+   * degree order, and iterator-range and allocator forms are available too.
    */
-  constexpr Poly() : v(1, 0) {}
+  using vector<T>::vector;
   /**
-   * Constructs a polynomial with \f$n\f$ stored zero coefficients.
+   * Constructs a polynomial from a coefficient vector, copying it.
    *
-   * Runs in \f$O(n)\f$ time.
-   *
-   * @param n the number of coefficients to allocate.
-   * @pre \f$n \ge 0\f$.
-   */
-  explicit constexpr Poly(int n) { resize(n); }
-  /**
-   * Constructs a polynomial from coefficients in ascending degree order.
-   *
-   * Runs in \f$O(1)\f$ time after the by-value argument is constructed;
-   * passing an lvalue vector additionally copies its coefficients.
-   *
-   * @param v the coefficient vector, moved into the polynomial.
-   */
-  constexpr Poly(vector<T> v) : v(std::move(v)) {}
-  /**
-   * Constructs a polynomial from an explicit coefficient list.
-   *
-   * Runs in \f$O(n)\f$ time for \f$n\f$ coefficients.
+   * Runs in \f$O(s)\f$ time.
    *
    * @param coefficients the coefficients in ascending degree order.
    */
-  constexpr Poly(initializer_list<T> coefficients) : v(coefficients) {}
-
+  constexpr Poly(const vector<T> &coefficients) : vector<T>(coefficients) {}
   /**
-   * Returns the highest stored exponent, including trailing zeroes.
+   * Constructs a polynomial from a coefficient vector, moving it.
    *
    * Runs in \f$O(1)\f$ time.
    *
-   * @return \f$s-1\f$, or \f$-1\f$ for an empty polynomial.
-   * @note Call `shrink()` first when the mathematical degree is required.
+   * @param coefficients the coefficients in ascending degree order.
    */
-  constexpr int degree() const { return int(v.size()) - 1; }
-  /**
-   * Returns the number of stored coefficients, including trailing zeroes.
-   *
-   * Runs in \f$O(1)\f$ time.
-   */
-  constexpr int size() const { return int(v.size()); }
-  /**
-   * Checks whether no coefficients are stored.
-   *
-   * Runs in \f$O(1)\f$ time.
-   *
-   * @return `true` exactly when `size()==0`; `{0}` is not empty.
-   */
-  constexpr bool empty() const { return v.empty(); }
-  /**
-   * Changes the stored size, discarding high terms or appending zeroes.
-   *
-   * Runs in \f$O(s+n)\f$ time in the worst case, including reallocation.
-   *
-   * @param n the new number of coefficients.
-   * @pre \f$n \ge 0\f$.
-   */
-  constexpr void resize(int n) {
-    assert(n >= 0);
-    v.resize(n);
-  }
-  /**
-   * Provides read-only access to the stored coefficient vector.
-   *
-   * Runs in \f$O(1)\f$ time.
-   *
-   * @return a reference valid until this polynomial is destroyed; references
-   *     to individual coefficients may be invalidated by mutation.
-   */
-  constexpr const vector<T> &coefficients() const { return v; }
-  /**
-   * Compares stored coefficient vectors, without removing trailing zeroes.
-   *
-   * Runs in \f$O(s)\f$ time in the worst case.
-   *
-   * @return `true` when both sizes and all stored coefficients are equal.
-   */
-  constexpr bool operator==(const Poly &) const = default;
-  /**
-   * Reads the coefficient of \f$x^i\f$.
-   *
-   * Runs in \f$O(1)\f$ time.
-   *
-   * @param i the zero-based coefficient index.
-   * @pre \f$0 \le i < s\f$; missing coefficients are not implicitly accessible.
-   * @return the coefficient value.
-   */
-  constexpr T operator[](int i) const { return v[i]; }
-  /**
-   * Accesses the coefficient of \f$x^i\f$ for modification.
-   *
-   * Runs in \f$O(1)\f$ time.
-   *
-   * @param i the zero-based coefficient index.
-   * @pre \f$0 \le i < s\f$.
-   * @return a mutable reference to the coefficient.
-   */
-  constexpr T &operator[](int i) { return v[i]; }
+  constexpr Poly(vector<T> &&coefficients)
+      : vector<T>(std::move(coefficients)) {}
   /// @}
 
   /// @name Arithmetic
@@ -825,66 +748,52 @@ struct Poly {
    *
    * @param o the other factor; may alias this polynomial.
    * @return a reference to this polynomial.
-   * @throws std::invalid_argument if the coefficient modulus exceeds
-   * \f$2^{31}-1\f$. This check precedes all shortcuts and leaves this
-   * polynomial unchanged.
+   * @pre The coefficient modulus is at most \f$2^{31}-1\f$; wider moduli
+   * remove this operator from overload resolution at compile time.
    * @pre Inputs satisfy the backend's length, precision, and overflow limits
    *     described in `Poly`.
    */
-  constexpr Poly &operator*=(const Poly &o) {
-    // Reject unsupported moduli before the empty and quadratic shortcuts.
-    if constexpr (StaticModInt<T>) {
-      if constexpr (T::imod() > 2147483647LL) {
-        throw invalid_argument(
-            "Poly multiplication does not support moduli greater than 2^31-1");
-      }
-    }
-    if (empty() || o.empty()) {
-      v.clear();
+  constexpr Poly &operator*=(const Poly &o)
+    requires(!StaticModInt<T> || T::imod() <= 2147483647LL)
+  {
+    if (this->empty() || o.empty()) {
+      this->clear();
       return *this;
     }
     if constexpr (poly_setting == PolySetting::ntt) {
       if constexpr (ModInt<T>) {
-        if (min(size(), o.size()) <= 60) {
-          v = internal::poly::convolution_naive(v, o.v);
+        if (min(this->size(), o.size()) <= 60) {
+          *this = internal::poly::convolution_naive(*this, o);
           return *this;
         }
         if constexpr (StaticModInt<T>) {
           // The radix-4 kernel and three-prime reconstruction use 32-bit
           // moduli.
-          if constexpr (T::imod() <= 2147483647LL && T::is_prime_mod) {
-            int z = bit_ceil((unsigned int)(size() + o.size() - 1));
+          if constexpr (T::is_prime_mod) {
+            int z = bit_ceil((unsigned int)(this->size() + o.size() - 1));
             if ((T::imod() - 1) % z == 0) {
-              v = internal::poly::ntt::convolution(v, o.v);
+              *this = internal::poly::ntt::convolution(*this, o);
               return *this;
             }
           }
         }
-        v = internal::poly::ntt::convolution_arb_mod(v, o.v);
+        *this = internal::poly::ntt::convolution_arb_mod(*this, o);
       } else { // integral
-        vector<long long> a(degree() + 1), b(o.degree() + 1);
-        for (int i = 0; i <= degree(); i++) {
-          a[i] = v[i];
-        }
-        for (int i = 0; i <= o.degree(); i++) {
-          b[i] = o.v[i];
-        }
+        vector<long long> a(this->begin(), this->end()),
+            b(o.begin(), o.end());
         vector<long long> res = internal::poly::ntt::convolution_ll(a, b);
-        v.resize(res.size());
-        for (size_t i = 0; i < res.size(); i++) {
-          v[i] = res[i];
-        }
+        this->assign(res.begin(), res.end());
       }
     } else if constexpr (poly_setting == PolySetting::fft_sqrt) {
       if constexpr (ModInt<T>) {
-        v = internal::poly::fft::convolution_arb_mod(v, o.v);
+        *this = internal::poly::fft::convolution_arb_mod(*this, o);
       } else { // integral
-        v = internal::poly::fft::convolution_sqrt(v, o.v);
+        *this = internal::poly::fft::convolution_sqrt(*this, o);
       }
     } else if constexpr (poly_setting == PolySetting::fft) {
-      v = internal::poly::fft::convolution(v, o.v);
+      *this = internal::poly::fft::convolution(*this, o);
     } else if constexpr (poly_setting == PolySetting::fft_complex) {
-      v = internal::poly::fft::convolution_complex(v, o.v);
+      *this = internal::poly::fft::convolution_complex(*this, o);
     }
     return *this;
   }
@@ -896,11 +805,12 @@ struct Poly {
    * @param o the other factor.
    * @return the product, retaining trailing zeroes; empty if either input is
    * empty.
-   * @throws std::invalid_argument if the coefficient modulus exceeds
-   * \f$2^{31}-1\f$.
+   * @pre The coefficient modulus satisfies `operator*=()`.
    * @see operator*=(const Poly&)
    */
-  constexpr Poly operator*(const Poly &o) const {
+  constexpr Poly operator*(const Poly &o) const
+    requires(!StaticModInt<T> || T::imod() <= 2147483647LL)
+  {
     Poly res = *this;
     res *= o;
     return res;
@@ -915,10 +825,10 @@ struct Poly {
    * @return a reference to this polynomial, with \f$\max(s,t)\f$ stored terms.
    */
   constexpr Poly &operator+=(const Poly &other) {
-    if (size() < other.size())
-      resize(other.size());
-    for (int i = 0; i < other.size(); ++i)
-      v[i] += other[i];
+    if (this->size() < other.size())
+      this->resize(other.size());
+    for (int i = 0; i < (int)other.size(); ++i)
+      (*this)[i] += other[i];
     return *this;
   }
   /**
@@ -931,10 +841,10 @@ struct Poly {
    * @return a reference to this polynomial, with \f$\max(s,t)\f$ stored terms.
    */
   constexpr Poly &operator-=(const Poly &other) {
-    if (size() < other.size())
-      resize(other.size());
-    for (int i = 0; i < other.size(); ++i)
-      v[i] -= other[i];
+    if (this->size() < other.size())
+      this->resize(other.size());
+    for (int i = 0; i < (int)other.size(); ++i)
+      (*this)[i] -= other[i];
     return *this;
   }
   /**
@@ -946,7 +856,7 @@ struct Poly {
    * @return a reference to this polynomial.
    */
   constexpr Poly &operator*=(T scalar) {
-    for (T &x : v)
+    for (T &x : *this)
       x *= scalar;
     return *this;
   }
@@ -1000,7 +910,7 @@ struct Poly {
    */
   constexpr Poly operator-() const {
     Poly result(*this);
-    for (T &x : result.v)
+    for (T &x : result)
       x = -x;
     return result;
   }
@@ -1061,8 +971,8 @@ struct Poly {
    * Runs in \f$O(s)\f$ time.
    */
   void shrink() {
-    while (!empty() && v.back() == T(0))
-      v.pop_back();
+    while (!this->empty() && this->back() == T(0))
+      this->pop_back();
   }
   /**
    * Copies a prefix of the stored coefficients without padding.
@@ -1076,7 +986,7 @@ struct Poly {
    */
   Poly pre(int n) const {
     assert(n >= 0);
-    return vector<T>(v.begin(), v.begin() + min(n, size()));
+    return Poly(this->begin(), this->begin() + min(n, (int)this->size()));
   }
   /**
    * Copies the series to exactly \f$n\f$ coefficients, truncating or padding.
@@ -1100,7 +1010,7 @@ struct Poly {
    *
    * @return a polynomial of the same stored size in reversed order.
    */
-  Poly rev() const { return vector<T>(v.rbegin(), v.rend()); }
+  Poly rev() const { return Poly(this->rbegin(), this->rend()); }
   /**
    * Evaluates the polynomial at one point using Horner's rule.
    *
@@ -1111,8 +1021,8 @@ struct Poly {
    */
   T eval(T x) const {
     T result = 0;
-    for (int i = size(); i-- > 0;)
-      result = result * x + v[i];
+    for (int i = (int)this->size(); i-- > 0;)
+      result = result * x + (*this)[i];
     return result;
   }
   /**
@@ -1128,11 +1038,11 @@ struct Poly {
    */
   void multiply(T a, T b) {
     assert(a != T(0));
-    int n = size();
-    v.push_back(0);
+    int n = (int)this->size();
+    this->push_back(0);
     for (int i = n; i-- > 0;) {
-      v[i + 1] += v[i] * a;
-      v[i] *= b;
+      (*this)[i + 1] += (*this)[i] * a;
+      (*this)[i] *= b;
     }
   }
   /**
@@ -1152,16 +1062,16 @@ struct Poly {
   void divide(T a, T b)
     requires ModInt<T>
   {
-    assert(a != T(0) && !empty());
+    assert(a != T(0) && !this->empty());
     // Work from the leading coefficient: b may be zero, without a special case.
-    T inverse = a.inv(), carry = v.back() * inverse;
-    for (int i = size() - 2; i >= 0; --i) {
-      T next = (v[i] - b * carry) * inverse;
-      v[i] = carry;
+    T inverse = a.inv(), carry = this->back() * inverse;
+    for (int i = (int)this->size() - 2; i >= 0; --i) {
+      T next = ((*this)[i] - b * carry) * inverse;
+      (*this)[i] = carry;
       carry = next;
     }
     assert(carry == T(0));
-    v.pop_back();
+    this->pop_back();
   }
   /// @}
 
@@ -1175,10 +1085,10 @@ struct Poly {
    * @return \f$f'(x)\f$ with \f$\max(0,s-1)\f$ stored terms. Constants and
    * empty inputs both yield an empty polynomial.
    */
-  Poly differ() const {
-    Poly result(max(0, size() - 1));
-    for (int i = 1; i < size(); ++i)
-      result[i - 1] = v[i] * T(i);
+  Poly derivative() const {
+    Poly result(max(0, (int)this->size() - 1));
+    for (int i = 1; i < (int)this->size(); ++i)
+      result[i - 1] = (*this)[i] * T(i);
     return result;
   }
   /**
@@ -1196,10 +1106,10 @@ struct Poly {
   Poly integral() const
     requires StaticModInt<T>
   {
-    auto inverses = integer_inverses(size());
-    Poly result(size() + 1);
-    for (int i = 0; i < size(); ++i)
-      result[i + 1] = v[i] * inverses[i + 1];
+    auto inverses = integer_inverses((int)this->size());
+    Poly result(this->size() + 1);
+    for (int i = 0; i < (int)this->size(); ++i)
+      result[i + 1] = (*this)[i] * inverses[i + 1];
     return result;
   }
 
@@ -1228,16 +1138,16 @@ struct Poly {
   {
     n = precision(n);
     if (!n)
-      return Poly(0);
-    assert(!empty() && v[0] != T(0));
-    Poly result{v[0].inv()};
+      return Poly();
+    assert(!this->empty() && (*this)[0] != T(0));
+    Poly result{(*this)[0].inv()};
     for (int m = 1; m < n; m *= 2) {
       int length = min(2 * m, n);
       if (can_transform(2 * m)) {
         // Cyclic aliasing only affects the already-known low half. Reuse the
         // transform of g in g_new = g - g*(f*g-1), computing only the high
         // half.
-        vector<T> f = pre(length).v, g = result.v;
+        Poly f = pre(length), g = result;
         f.resize(2 * m);
         g.resize(2 * m);
         transform(f);
@@ -1287,24 +1197,6 @@ struct Poly {
     return (pre(n) * denominator.inv(n)).truncated(n);
   }
   /**
-   * Replaces this polynomial with its truncated series quotient.
-   *
-   * Runs in \f$O(M(n))\f$ time.
-   *
-   * @param denominator the divisor series; may alias this polynomial.
-   * @param n the output precision; \f$-1\f$ means this polynomial's original
-   * size.
-   * @pre The coefficient field, precision, and divisor satisfy `divide()`.
-   * @return a reference to this polynomial with exactly \f$n\f$ stored
-   * coefficients.
-   * @see divide(const Poly&, int)
-   */
-  Poly &divide_in_place(const Poly &denominator, int n = -1)
-    requires StaticModInt<T>
-  {
-    return *this = divide(denominator, n);
-  }
-  /**
    * Computes the formal logarithm modulo \f$x^n\f$.
    *
    * Uses the identity \f$(\log f)'=f'/f\f$ and sets the constant term to zero.
@@ -1324,9 +1216,9 @@ struct Poly {
   {
     n = precision(n);
     if (!n)
-      return Poly(0);
-    assert(!empty() && v[0] == T(1) && (long long)n <= T::imod());
-    return (pre(n).differ() * inv(n - 1)).truncated(n - 1).integral();
+      return Poly();
+    assert(!this->empty() && (*this)[0] == T(1) && (long long)n <= T::imod());
+    return (pre(n).derivative() * inv(n - 1)).truncated(n - 1).integral();
   }
   /**
    * Computes the formal exponential modulo \f$x^n\f$.
@@ -1349,8 +1241,8 @@ struct Poly {
   {
     n = precision(n);
     if (!n)
-      return Poly(0);
-    assert((empty() || v[0] == T(0)) && (long long)n <= T::imod());
+      return Poly();
+    assert((this->empty() || (*this)[0] == T(0)) && (long long)n <= T::imod());
     if (!can_transform(bit_ceil((unsigned int)n))) {
       Poly result{1};
       for (int m = 1; m < n; m *= 2) {
@@ -1366,10 +1258,10 @@ struct Poly {
     Poly f = truncated(n), g{1};
     f[0] = 1;
     vector<T> transformed_inverse;
-    Poly derivative = pre(n).differ().truncated(n);
+    Poly derivative = pre(n).derivative().truncated(n);
     auto inverses = integer_inverses(n - 1);
     for (int m = 1; m < n; m *= 2) {
-      vector<T> transformed_f = f.pre(m).v;
+      Poly transformed_f = f.pre(m);
       transformed_f.resize(2 * m);
       transform(transformed_f);
       if (m > 1) {
@@ -1387,7 +1279,7 @@ struct Poly {
         for (int i = 0; i < m / 2; ++i)
           g[m / 2 + i] = -error[i];
       }
-      vector<T> residual = derivative.pre(m - 1).v;
+      Poly residual = derivative.pre(m - 1);
       residual.resize(m);
       transform(residual);
       for (int i = 0; i < m; ++i)
@@ -1395,19 +1287,19 @@ struct Poly {
       inverse_transform(residual);
       // x*(f' - input'*f), cyclically modulo x^m-1. Its low coefficients
       // vanish before wrapping, leaving precisely the error needed above m.
-      Poly difference = f.pre(m).differ().truncated(m);
+      Poly difference = f.pre(m).derivative().truncated(m);
       for (int i = 0; i < m; ++i)
         difference[i] -= residual[i];
-      rotate(difference.v.rbegin(), difference.v.rbegin() + 1,
-             difference.v.rend());
+      rotate(difference.rbegin(), difference.rbegin() + 1,
+             difference.rend());
       difference.resize(2 * m);
-      transform(difference.v);
-      transformed_inverse = g.v;
+      transform(difference);
+      transformed_inverse = g;
       transformed_inverse.resize(2 * m);
       transform(transformed_inverse);
       for (int i = 0; i < 2 * m; ++i)
         difference[i] *= transformed_inverse[i];
-      inverse_transform(difference.v);
+      inverse_transform(difference);
       vector<T> correction(2 * m);
       for (int i = 0; i < m && m + i < n; ++i)
         correction[i] = f[m + i] - difference[i] * inverses[m + i];
@@ -1451,16 +1343,16 @@ struct Poly {
       return result;
     }
     int leading = 0;
-    while (leading < size() && v[leading] == T(0))
+    while (leading < (int)this->size() && (*this)[leading] == T(0))
       ++leading;
-    if (leading == size() || leading > (n - 1) / k)
+    if (leading == (int)this->size() || leading > (n - 1) / k)
       return result;
     int shift = int(leading * k), length = n - shift;
-    Poly unit(vector<T>(v.begin() + leading,
-                        v.begin() + min(size(), leading + length)));
-    unit /= v[leading];
-    unit = (unit.log(length) * T(k)).exp(length) * v[leading].pow(k);
-    copy(unit.v.begin(), unit.v.end(), result.v.begin() + shift);
+    Poly unit(this->begin() + leading,
+              this->begin() + min((int)this->size(), leading + length));
+    unit /= (*this)[leading];
+    unit = (unit.log(length) * T(k)).exp(length) * (*this)[leading].pow(k);
+    copy(unit.begin(), unit.end(), result.begin() + shift);
     return result;
   }
   /**
@@ -1495,18 +1387,19 @@ struct Poly {
       return result;
     }
     int leading = 0;
-    while (leading < size() && v[leading] == T(0))
+    while (leading < (int)this->size() && (*this)[leading] == T(0))
       ++leading;
-    if (leading == size() || leading > (n - 1) / k)
+    if (leading == (int)this->size() || leading > (n - 1) / k)
       return result;
     int shift = int(leading * k), length = n - shift;
     vector<pair<int, T>> terms;
-    for (int i = leading + 1; i < size() && i - leading < length; ++i)
-      if (v[i] != T(0))
-        terms.emplace_back(i - leading, v[i]);
+    for (int i = leading + 1;
+         i < (int)this->size() && i - leading < length; ++i)
+      if ((*this)[i] != T(0))
+        terms.emplace_back(i - leading, (*this)[i]);
     auto inverses = integer_inverses(length - 1);
-    T inverse_constant = v[leading].inv(), exponent = T(k);
-    result[shift] = v[leading].pow(k);
+    T inverse_constant = (*this)[leading].inv(), exponent = T(k);
+    result[shift] = (*this)[leading].pow(k);
     for (int i = 1; i < length; ++i) {
       T sum = 0;
       for (auto [d, coefficient] : terms) {
@@ -1549,16 +1442,17 @@ struct Poly {
     denominator.shrink();
     assert(!denominator.empty());
     if (numerator.size() < denominator.size())
-      return {Poly(0), numerator};
-    int length = numerator.size() - denominator.size() + 1;
+      return {Poly(), numerator};
+    int length = (int)numerator.size() - (int)denominator.size() + 1;
     Poly quotient;
-    if (min(length, denominator.size()) <= 60) {
+    if (min(length, (int)denominator.size()) <= 60) {
       quotient.resize(length);
-      T inverse = denominator.v.back().inv();
+      T inverse = denominator.back().inv();
       for (int i = length; i-- > 0;) {
-        T coefficient = numerator[i + denominator.size() - 1] * inverse;
+        T coefficient =
+            numerator[i + (int)denominator.size() - 1] * inverse;
         quotient[i] = coefficient;
-        for (int j = 0; j < denominator.size(); ++j)
+        for (int j = 0; j < (int)denominator.size(); ++j)
           numerator[i + j] -= coefficient * denominator[j];
       }
     } else {
@@ -1571,36 +1465,6 @@ struct Poly {
     numerator.shrink();
     quotient.shrink();
     return {std::move(quotient), std::move(numerator)};
-  }
-  /**
-   * Computes the polynomial quotient, discarding the remainder.
-   *
-   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the divisor's stored size.
-   *
-   * @param divisor the polynomial divisor.
-   * @pre The coefficient field and nonzero divisor satisfy `divmod()`.
-   * @return the normalized quotient; empty when its value is zero.
-   * @see divmod()
-   */
-  Poly divide_as_poly(const Poly &divisor) const
-    requires StaticModInt<T>
-  {
-    return divmod(divisor).first;
-  }
-  /**
-   * Returns the polynomial quotient, not a truncated series quotient.
-   *
-   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the divisor's stored size.
-   *
-   * @param divisor the polynomial divisor.
-   * @pre The coefficient field and nonzero divisor satisfy `divmod()`.
-   * @return the normalized quotient.
-   * @see divide(const Poly&, int)
-   */
-  Poly operator/(const Poly &divisor) const
-    requires StaticModInt<T>
-  {
-    return divmod(divisor).first;
   }
   /**
    * Returns the remainder of polynomial division.
@@ -1618,6 +1482,22 @@ struct Poly {
     return divmod(divisor).second;
   }
   /**
+   * Divides by another polynomial in place, keeping only the remainder.
+   *
+   * Runs in \f$O(M(s+t))\f$ time, where \f$t\f$ is the divisor's stored size.
+   *
+   * @param divisor the polynomial divisor; may alias this polynomial.
+   * @pre The coefficient field and nonzero divisor satisfy `divmod()`.
+   * @return a reference to this polynomial, now storing the normalized
+   * remainder.
+   * @see divmod()
+   */
+  Poly &operator%=(const Poly &divisor)
+    requires StaticModInt<T>
+  {
+    return *this = divmod(divisor).second;
+  }
+  /**
    * Shifts the polynomial's argument by a constant.
    *
    * Runs in \f$O(M(s))\f$ time.
@@ -1633,9 +1513,9 @@ struct Poly {
     requires StaticModInt<T>
   {
     assert_field();
-    int n = size();
+    int n = (int)this->size();
     if (!n)
-      return Poly(0);
+      return Poly();
     assert((long long)n <= T::imod());
     vector<T> factorial(n, 1), inverse_factorial(n, 1);
     for (int i = 1; i < n; ++i)
@@ -1646,7 +1526,7 @@ struct Poly {
     Poly a(n), b(n);
     T power = 1;
     for (int i = 0; i < n; ++i) {
-      a[n - 1 - i] = v[i] * factorial[i];
+      a[n - 1 - i] = (*this)[i] * factorial[i];
       b[i] = power * inverse_factorial[i];
       power *= c;
     }
@@ -1673,12 +1553,12 @@ struct Poly {
     requires StaticModInt<T>
   {
     assert_field();
-    int m = xs.size();
+    int m = (int)xs.size();
     vector<T> result(m);
-    if (!m || empty())
+    if (!m || this->empty())
       return result;
     auto tree = product_tree(xs);
-    int base = tree.size() / 2;
+    int base = (int)tree.size() / 2;
     auto descend = [&](auto &&self, int node, int left, int right,
                        const Poly &f) -> void {
       if (left >= m)
@@ -1720,12 +1600,12 @@ struct Poly {
   {
     assert_field();
     assert(xs.size() == ys.size());
-    int m = xs.size();
+    int m = (int)xs.size();
     if (!m)
-      return Poly(0);
+      return Poly();
     auto tree = product_tree(xs);
-    int base = tree.size() / 2;
-    vector<T> weights = tree[1].differ().multipoint_eval(xs);
+    int base = (int)tree.size() / 2;
+    vector<T> weights = tree[1].derivative().multipoint_eval(xs);
     // Batch inversion: one modular inverse instead of m exponentiations.
     vector<T> prefix(m + 1, 1);
     for (int i = 0; i < m; ++i) {
@@ -1733,7 +1613,7 @@ struct Poly {
       prefix[i + 1] = prefix[i] * weights[i];
     }
     T inverse = prefix[m].inv();
-    vector<Poly> values(2 * base, Poly(0));
+    vector<Poly> values(2 * base);
     for (int i = m; i-- > 0;) {
       values[base + i] = Poly{ys[i] * prefix[i] * inverse};
       inverse *= weights[i];
@@ -1748,7 +1628,7 @@ struct Poly {
   /// @name Square roots and rational series coefficients
   /// @{
   /**
-   * Computes a formal square root modulo \f$x^n\f$, if one exists.
+   * Computes a formal square root modulo \f$x^n\f$.
    *
    * Uses Tonelli-Shanks for the first nonzero coefficient and Newton doubling
    * for the remaining series. Either sign is valid. Any high coefficients left
@@ -1760,37 +1640,36 @@ struct Poly {
    * @pre `T` is a static modular integer with an odd prime modulus \f$p \le
    * 2^{31}-1\f$.
    * @pre \f$n \ge -1\f$ and the resolved precision is at most \f$p\f$.
+   * @pre A formal square root exists: the first nonzero term of degree below
+   * \f$n\f$ has even degree and a square coefficient, or all such
+   * coefficients are zero.
    * @return a series \f$g\f$ with exactly \f$n\f$ terms satisfying
-   * \f$g^2\equiv f\pmod{x^n}\f$, or `std::nullopt` if the first nonzero term of
-   * degree below \f$n\f$ has odd degree or a nonsquare coefficient. A zero
-   * input modulo \f$x^n\f$ yields \f$n\f$ zeroes.
+   * \f$g^2\equiv f\pmod{x^n}\f$. A zero input modulo \f$x^n\f$ yields
+   * \f$n\f$ zeroes.
    */
-  optional<Poly> sqrt(int n = -1) const
+  Poly sqrt(int n = -1) const
     requires StaticModInt<T>
   {
     n = precision(n);
     assert(T::imod() != 2 && (long long)n <= T::imod());
     if (!n)
-      return Poly(0);
-    int leading = 0;
-    while (leading < min(n, size()) && v[leading] == T(0))
+      return Poly();
+    int bound = min(n, (int)this->size()), leading = 0;
+    while (leading < bound && (*this)[leading] == T(0))
       ++leading;
-    if (leading == min(n, size()))
+    if (leading == bound)
       return Poly(n);
-    if (leading & 1)
-      return nullopt;
-    auto root = modular_sqrt(v[leading]);
-    if (!root)
-      return nullopt;
+    assert(!(leading & 1));
+    T root = modular_sqrt((*this)[leading]);
     int length = n - leading;
-    Poly unit(vector<T>(v.begin() + leading, v.begin() + min(size(), n)));
-    Poly result{*root};
+    Poly unit(this->begin() + leading, this->begin() + bound);
+    Poly result{root};
     T inverse_two = T(2).inv();
     for (int m = 1; m < length; m *= 2) {
       int next = min(2 * m, length);
       result = (result + unit.divide(result, next)) * inverse_two;
     }
-    result.v.insert(result.v.begin(), leading / 2, T(0));
+    result.insert(result.begin(), leading / 2, T(0));
     result.resize(n);
     return result;
   }
@@ -1825,7 +1704,7 @@ struct Poly {
     T polynomial_part = 0;
     if (numerator.size() >= denominator.size()) {
       auto [quotient, remainder] = numerator.divmod(denominator);
-      if (k < quotient.size())
+      if (k < (long long)quotient.size())
         polynomial_part = quotient[int(k)];
       numerator = std::move(remainder);
     }
@@ -1838,8 +1717,8 @@ struct Poly {
       // the transforms for the next iteration instead of multiplying anew.
       numerator.resize(2 * base);
       denominator.resize(2 * base);
-      transform(numerator.v);
-      transform(denominator.v);
+      transform(numerator);
+      transform(denominator);
       vector<int> reversed_bits(base);
       for (int i = 1; i < base; ++i)
         reversed_bits[i] = (reversed_bits[i / 2] / 2) + (i & 1) * (base / 2);
@@ -1866,32 +1745,35 @@ struct Poly {
                                  numerator[2 * i + 1] * denominator[2 * i]) *
                                 inverse_two;
         }
-        numerator.v = next_numerator;
-        denominator.v = next_denominator;
+        // Recycle the previous buffers for the next iteration.
+        numerator.swap(next_numerator);
+        denominator.swap(next_denominator);
+        numerator.resize(base);
+        denominator.resize(base);
         k >>= 1;
         if (k) {
-          internal::poly::ntt::ntt_doubling(numerator.v);
-          internal::poly::ntt::ntt_doubling(denominator.v);
+          internal::poly::ntt::ntt_doubling(numerator);
+          internal::poly::ntt::ntt_doubling(denominator);
         }
       }
       // The constant coefficient is the average of all evaluations.
       T numerator_sum = 0, denominator_sum = 0;
-      for (T value : numerator.v)
+      for (T value : numerator)
         numerator_sum += value;
-      for (T value : denominator.v)
+      for (T value : denominator)
         denominator_sum += value;
       return polynomial_part + numerator_sum / denominator_sum;
     }
     while (k && !numerator.empty()) {
       Poly reflected = denominator;
-      for (int i = 1; i < reflected.size(); i += 2)
+      for (int i = 1; i < (int)reflected.size(); i += 2)
         reflected[i] = -reflected[i];
       Poly p = numerator * reflected, q = denominator * reflected;
       numerator.resize((p.size() + 1 - (k & 1)) / 2);
-      for (int i = 0; i < numerator.size(); ++i)
+      for (int i = 0; i < (int)numerator.size(); ++i)
         numerator[i] = p[2 * i + (k & 1)];
       denominator.resize((q.size() + 1) / 2);
-      for (int i = 0; i < denominator.size(); ++i)
+      for (int i = 0; i < (int)denominator.size(); ++i)
         denominator[i] = q[2 * i];
       numerator.shrink();
       k >>= 1;
@@ -1934,7 +1816,8 @@ struct Poly {
     denominator[0] = 1;
     for (int i = 0; i < (int)recurrence.size(); ++i)
       denominator[i + 1] = -recurrence[i];
-    Poly numerator = (Poly(initial) * denominator).pre(initial.size());
+    Poly numerator =
+        (Poly(initial) * denominator).pre((int)initial.size());
     return bostan_mori(k, std::move(numerator), std::move(denominator));
   }
 
@@ -1954,7 +1837,7 @@ private:
   {
     assert_field();
     assert(n >= -1);
-    return n == -1 ? size() : n;
+    return n == -1 ? (int)this->size() : n;
   }
   static vector<T> integer_inverses(int n)
     requires StaticModInt<T>
@@ -1999,13 +1882,12 @@ private:
     return tree;
   }
   // Tonelli-Shanks, entirely in the coefficient field.
-  static optional<T> modular_sqrt(T a)
+  static T modular_sqrt(T a)
     requires StaticModInt<T>
   {
     if (a == T(0))
       return T(0);
-    if (a.pow((T::imod() - 1) / 2) != T(1))
-      return nullopt;
+    assert(a.pow((T::imod() - 1) / 2) == T(1));
     long long odd = T::imod() - 1;
     int exponent = 0;
     while (!(odd & 1)) {
@@ -2032,6 +1914,5 @@ private:
     }
     return root;
   }
-  vector<T> v;
 };
 } // namespace maomao90

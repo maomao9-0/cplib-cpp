@@ -6,7 +6,7 @@ using mint = static_modint<>;
 using poly = Poly<mint>;
 
 void print(const poly &a) {
-  for (int i = 0; i < a.size(); ++i)
+  for (int i = 0; i < (int)a.size(); ++i)
     cout << a[i] << ' ';
   cout << '\n';
 }

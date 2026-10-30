@@ -1,12 +1,25 @@
 #define PROBLEM "https://judge.yosupo.jp/problem/aplusb"
 
 #include "library/math/poly.hpp"
+#include <algorithm>
 #include <cassert>
 #include <climits>
-#include <cstdlib>
 #include <random>
-#include <string>
 using namespace maomao90;
+
+// Mirrors the precondition of Poly::sqrt(): a formal square root modulo x^n
+// exists exactly when the first nonzero coefficient within precision n sits
+// at an even degree and is a quadratic residue.
+template <class P> bool sqrt_exists(const P &f, int n) {
+  using Mint = typename P::value_type;
+  int bound = std::min(n, (int)f.size()), leading = 0;
+  while (leading < bound && f[leading] == Mint(0))
+    ++leading;
+  if (leading == bound)
+    return true;
+  return !(leading & 1) &&
+         f[leading].pow((Mint::imod() - 1) / 2) == Mint(1);
+}
 
 template <class Mint> void check_field() {
   using P = Poly<Mint>;
@@ -19,8 +32,8 @@ template <class Mint> void check_field() {
   };
   auto naive_product = [](const P &a, const P &b, int n) {
     P c(n);
-    for (int i = 0; i < a.size(); ++i)
-      for (int j = 0; j < b.size() && i + j < n; ++j)
+    for (int i = 0; i < (int)a.size(); ++i)
+      for (int j = 0; j < (int)b.size() && i + j < n; ++j)
         c[i + j] += a[i] * b[j];
     return c;
   };
@@ -31,7 +44,7 @@ template <class Mint> void check_field() {
     for (int trial = 0; trial < 5; ++trial) {
       P a = random_poly(n), b = random_poly(n / 2 + 1);
       assert((a * b).truncated(n) == naive_product(a, b, n));
-      assert(a.integral().differ() == a);
+      assert(a.integral().derivative() == a);
       assert(a.pre(n + 10) == a);
       assert(a.truncated(n + 10).pre(n) == a);
       if (!n) {
@@ -51,7 +64,7 @@ template <class Mint> void check_field() {
       assert(a.inv() == naive_inverse);
       assert(naive_product(a, a.inv(), n) == identity);
       P logarithm(n),
-          derivative = naive_product(a.differ(), naive_inverse, n - 1);
+          derivative = naive_product(a.derivative(), naive_inverse, n - 1);
       for (int i = 1; i < n; ++i)
         logarithm[i] = derivative[i - 1] / Mint(i);
       assert(a.log() == logarithm);
@@ -75,13 +88,14 @@ template <class Mint> void check_field() {
       a[0] = 3;
       assert(a.pow(7) == a.sparse_pow(7));
       assert(a.pow(LLONG_MAX) == a.sparse_pow(LLONG_MAX));
-      auto root = naive_product(a, a, n).sqrt();
-      assert(root && naive_product(*root, *root, n) == naive_product(a, a, n));
+      P root = naive_product(a, a, n).sqrt();
+      assert(naive_product(root, root, n) == naive_product(a, a, n));
       if (n > 3) {
         a[0] = a[1] = 0;
         auto square = naive_product(a, a, n);
+        assert(sqrt_exists(square, n));
         root = square.sqrt();
-        assert(root && naive_product(*root, *root, n) == square);
+        assert(naive_product(root, root, n) == square);
       }
       Mint shift = 7;
       P shifted(n), basis{1};
@@ -115,14 +129,14 @@ template <class Mint> void check_field() {
       }
     }
   }
-  assert(P(0).degree() == -1);
+  assert(P().empty() && P(0).empty());
   assert((P(0) * P{1}).empty());
   assert((P{1} * P(0)).empty());
   assert(P(0).exp(4) == P({1, 0, 0, 0}));
   assert(P{1}.inv(4) == P({1, 0, 0, 0}));
   assert(P{1}.log(4) == P(4));
   assert(P(0).integral() == P{0});
-  assert(!P({0, 1}).sqrt(4));
+  assert(!sqrt_exists(P({0, 1}), 4));
   assert(P({0, 0, 0, 1}).sqrt(2) == P(2));
   assert(P({0, 1}).pow(LLONG_MAX, 4) == P(4));
   assert(P({0, 1}).sparse_pow(LLONG_MAX, 4) == P(4));
@@ -132,17 +146,17 @@ template <class Mint> void check_field() {
   auto division = P({1, 2, 3, 0}).divmod(P({1, 0}));
   assert(division.first == P({1, 2, 3}) && division.second.empty());
   P alias{1, 2, 3};
-  alias.divide_in_place(alias, 5);
+  alias = alias.divide(alias, 5);
   assert(alias == P({1, 0, 0, 0, 0}));
   for (int trial = 0; trial < 50; ++trial) {
     P numerator = random_poly(5 + trial),
       denominator = random_poly(1 + trial % 13);
     denominator[0] = 1;
     P series(150);
-    for (int i = 0; i < series.size(); ++i) {
-      if (i < numerator.size())
+    for (int i = 0; i < (int)series.size(); ++i) {
+      if (i < (int)numerator.size())
         series[i] = numerator[i];
-      for (int j = 1; j < denominator.size() && j <= i; ++j)
+      for (int j = 1; j < (int)denominator.size() && j <= i; ++j)
         series[i] -= denominator[j] * series[i - j];
     }
     for (int k : {0, 1, 2, 17, 149})
@@ -164,10 +178,10 @@ template <class Mint> void check_field() {
     P denominator = random_poly(denominator_size);
     denominator[0] = 1;
     P series(301);
-    for (int i = 0; i < series.size(); ++i) {
-      if (i < numerator.size())
+    for (int i = 0; i < (int)series.size(); ++i) {
+      if (i < (int)numerator.size())
         series[i] = numerator[i];
-      for (int j = 1; j < denominator.size() && j <= i; ++j)
+      for (int j = 1; j < (int)denominator.size() && j <= i; ++j)
         series[i] -= denominator[j] * series[i - j];
     }
     for (int k : {0, 1, 2, 17, 149, 300})
@@ -176,7 +190,7 @@ template <class Mint> void check_field() {
   Mint nonresidue = 2;
   while (nonresidue.pow((Mint::imod() - 1) / 2) == Mint(1))
     ++nonresidue;
-  assert(!P{nonresidue}.sqrt(4));
+  assert(!sqrt_exists(P{nonresidue}, 4));
   // Explicit precisions both shorter and longer than the stored input.
   P short_series{1, 2, 3};
   assert(naive_product(short_series, short_series.inv(35), 35) ==
@@ -216,39 +230,20 @@ void check_convolution_dispatch() {
     for (int i = 0; i < 90; ++i)
       b[i] = i * i - 3;
     auto result = Poly<M>(a) * Poly<M>(b);
-    assert(result.coefficients() == internal::poly::convolution_naive(a, b));
+    assert(result == internal::poly::convolution_naive(a, b));
   }
   using C = static_modint<1000>;
   vector<C> a(70, 999), b(75, 999);
-  assert((Poly<C>(a) * Poly<C>(b)).coefficients() ==
-         internal::poly::convolution_naive(a, b));
+  assert(Poly<C>(a) * Poly<C>(b) == internal::poly::convolution_naive(a, b));
 }
 
 template <class Wide, PolySetting setting> void check_unsupported_modulus() {
   using P = Poly<Wide, setting>;
-  // Empty and small inputs must not silently bypass the modulus restriction.
-  for (int n : {0, 1, 65}) {
-    P a(vector<Wide>(n, 2)), b(vector<Wide>(n, 3));
-    auto original = a;
-    bool rejected = false;
-    try {
-      a *= b;
-    } catch (const std::invalid_argument &error) {
-      rejected = std::string(error.what()).find("moduli greater than 2^31-1") !=
-                 std::string::npos;
-    }
-    if (!rejected || a != original)
-      std::abort();
-    rejected = false;
-    try {
-      auto result = a * b;
-      (void)result;
-    } catch (const std::invalid_argument &) {
-      rejected = true;
-    }
-    if (!rejected)
-      std::abort();
-  }
+  // Multiplication on an unsupported modulus is removed from overload
+  // resolution, before the empty and quadratic shortcuts can silently
+  // bypass the restriction.
+  static_assert(!requires(P a, P b) { a *= b; });
+  static_assert(!requires(P a, P b) { a * b; });
 }
 
 int main() {

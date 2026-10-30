@@ -19,7 +19,7 @@ int main() {
     cin >> b[i];
   }
   poly c = a * b;
-  for (int i = 0; i <= c.degree(); i++) {
+  for (int i = 0; i < (int)c.size(); i++) {
     cout << c[i] << ' ';
   }
   cout << '\n';
