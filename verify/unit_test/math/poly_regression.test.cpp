@@ -41,6 +41,7 @@ static_assert(
     backend_matrix<complex<long double>, false, false, false, true>());
 static_assert(backend_matrix<NotComplex, false, false, false, false>());
 static_assert(backend_matrix<void, false, false, false, false>());
+static_assert(backend_matrix<bool, false, false, false, false>());
 static_assert(!HasPoly<int, static_cast<PolySetting>(-1)>);
 static_assert(!is_convertible_v<PolySetting, int>);
 static_assert(

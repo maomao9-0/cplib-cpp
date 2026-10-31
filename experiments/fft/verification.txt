@@ -1,0 +1,37 @@
+Final regression review: all checks passed.
+GCC 16.2.1 and Clang 22.1.8; C++20.
+oj-verify: locally generated official Library Checker data, not remote submissions.
+verify/unit_test/math/extended_gcd.test.cpp: 12 case runs passed
+verify/unit_test/math/fft.test.cpp: 12 case runs passed
+verify/unit_test/math/fft_allocation.test.cpp: 12 case runs passed
+verify/unit_test/math/fft_fuzz.test.cpp: 12 case runs passed
+verify/unit_test/math/fps.test.cpp: 12 case runs passed
+verify/unit_test/math/modint.test.cpp: 12 case runs passed
+verify/unit_test/math/poly_regression.test.cpp: 12 case runs passed
+verify/unit_test/math/pow_mod.test.cpp: 12 case runs passed
+verify/yosupo/convolution/convolution.test.cpp: 53 case runs passed
+verify/yosupo/convolution/convolution_1000000007.test.cpp: 48 case runs passed
+verify/yosupo/convolution/convolution_fft.test.cpp: 53 case runs passed
+verify/yosupo/convolution/convolution_fft_1000000007.test.cpp: 48 case runs passed
+verify/yosupo/fps/division_of_polynomials.test.cpp: 35 case runs passed
+verify/yosupo/fps/exp_of_formal_power_series.test.cpp: 26 case runs passed
+verify/yosupo/fps/inv_of_formal_power_series.test.cpp: 25 case runs passed
+verify/yosupo/fps/kth_term_of_linearly_recurrent_sequence.test.cpp: 20 case runs passed
+verify/yosupo/fps/log_of_formal_power_series.test.cpp: 25 case runs passed
+verify/yosupo/fps/multipoint_evaluation.test.cpp: 11 case runs passed
+verify/yosupo/fps/polynomial_interpolation.test.cpp: 9 case runs passed
+verify/yosupo/fps/polynomial_taylor_shift.test.cpp: 38 case runs passed
+verify/yosupo/fps/pow_of_formal_power_series.test.cpp: 37 case runs passed
+verify/yosupo/fps/pow_of_formal_power_series_sparse.test.cpp: 35 case runs passed
+verify/yosupo/fps/sqrt_of_formal_power_series.test.cpp: 35 case runs passed
+Total: 594 official case runs across 23 drivers.
+FFT regression: GCC AddressSanitizer, UndefinedBehaviorSanitizer, and float-cast-overflow passed.
+Allocation-failure/concurrency regression: GCC AddressSanitizer and UndefinedBehaviorSanitizer passed.
+Fuzz regression: GCC UndefinedBehaviorSanitizer and float-cast-overflow passed.
+LeakSanitizer disabled because this environment uses ptrace.
+Clang -O2: FFT, allocation-failure, and fuzz regression drivers passed.
+Fuzz coverage: 1200 integer/real reference cases and 200 modular reference cases.
+12115404 coefficients checked against exact NTT/CRT
+113-bit Boost reference measurements: accuracy-quad.csv.
+Timing arithmetic vectorization and contraction disabled; final timings pinned to CPU 0.
+Native scalar -O3 with floating-point contraction enabled: FFT regression passed.

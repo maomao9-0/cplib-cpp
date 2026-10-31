@@ -1,0 +1,13 @@
+real/integer 61 passed
+real/integer 127 passed
+real/integer 1025 passed
+real/integer 16385 passed
+real/integer 131073 passed
+real/integer 524289 passed
+modular 61 passed
+modular 127 passed
+modular 1025 passed
+modular 16385 passed
+modular 131073 passed
+modular 524289 passed
+12115404 coefficients checked against exact NTT/CRT

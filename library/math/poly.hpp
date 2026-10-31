@@ -12,9 +12,11 @@
 #include <array>
 #include <bit>
 #include <cassert>
+#include <cmath>
 #include <complex>
 #include <concepts>
 #include <initializer_list>
+#include <numbers>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -28,7 +30,18 @@ namespace maomao90 {
 using namespace std;
 namespace internal::poly {
 template <typename T> inline long long round_integral(T x) {
-  return x < 0 ? (long long)(x - T(0.5)) : (long long)(x + T(0.5));
+  // Adding 0.5 first can change an already integral value near 2^52 in double.
+  long long value = static_cast<long long>(x);
+  T fraction = x - static_cast<T>(value);
+  return value + (fraction >= T(0.5)) - (fraction <= T(-0.5));
+}
+
+template <concepts::broadly_unsigned_integral T, floating_point F>
+  requires(!same_as<T, bool>)
+inline T round_nonnegative(F x) {
+  // Small negative FFT noise truncates to zero. The exact lane is nonnegative.
+  T value = static_cast<T>(x);
+  return value + (x - static_cast<F>(value) >= F(0.5));
 }
 
 template <class T>
@@ -37,16 +50,26 @@ vector<T> convolution_naive(const vector<T> &a, const vector<T> &b) {
   if (!n || !m)
     return {};
   vector<T> ans(n + m - 1);
+  auto product = [](const T &x, const T &y) {
+    if constexpr (unsigned_integral<T>) {
+      // Narrow unsigned operands otherwise promote to signed int, whose
+      // multiplication can overflow before the result is reduced to T.
+      using U = common_type_t<T, unsigned int>;
+      return U(x) * U(y);
+    } else {
+      return x * y;
+    }
+  };
   if (n < m) {
     for (int j = 0; j < m; j++) {
       for (int i = 0; i < n; i++) {
-        ans[i + j] += a[i] * b[j];
+        ans[i + j] += product(a[i], b[j]);
       }
     }
   } else {
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < m; j++) {
-        ans[i + j] += a[i] * b[j];
+        ans[i + j] += product(a[i], b[j]);
       }
     }
   }
@@ -434,83 +457,227 @@ inline vector<mint> convolution_arb_mod(const vector<mint> &a,
 }
 } // namespace ntt
 namespace fft {
+// Keep only the widest layer of extended-precision roots. Every new root
+// has at most logarithmically many multiplications in its construction.
+template <floating_point T> struct fft_roots {
+  vector<complex<T>> root{complex<T>(1), complex<T>(1)};
+  vector<complex<T>> cube{complex<T>(1)};
+  vector<complex<long double>> wide{complex<long double>(1)};
+  int prepared = 2;
+
+  void ensure(int n) {
+    // Vector sizes may already have grown when an earlier allocation failed.
+    // Only completed layers may be used to resume construction.
+    int old = prepared;
+    if (n <= old)
+      return;
+    root.resize(n);
+    cube.resize(n / 2);
+    for (int k = old; k < n; k *= 2) {
+      wide.resize(k);
+      auto step = polar(1.0L, numbers::pi_v<long double> / k);
+      // Descending order preserves the preceding layer until it is consumed.
+      for (int j = k - 1; j >= 0; --j) {
+        wide[j] = j & 1 ? wide[j / 2] * step : wide[j / 2];
+      }
+      wide[0] = {1, 0};
+      wide[k / 2] = {0, 1};
+      for (int j = 0; j < k; ++j) {
+        root[k + j] = complex<T>(wide[j]);
+      }
+      for (int j = 0; j < k / 2; ++j) {
+        int t = 3 * j;
+        cube[k / 2 + j] = complex<T>(t < k ? wide[t] : -wide[t - k]);
+      }
+      prepared = 2 * k;
+    }
+  }
+};
+
+template <floating_point T> fft_roots<T> &get_roots(int n) {
+  // Each thread grows its own cache; concurrent independent transforms do not
+  // race while extending or reading a shared vector.
+  static thread_local fft_roots<T> roots;
+  roots.ensure(n);
+  return roots;
+}
+
+template <floating_point T>
+inline complex<T> multiply(complex<T> a, complex<T> b) {
+  return {a.real() * b.real() - a.imag() * b.imag(),
+          a.real() * b.imag() + a.imag() * b.real()};
+}
+
+/**
+ * Computes an unnormalized positive-sign discrete Fourier transform in place.
+ *
+ * Input and output use natural order. For length \f$n\f$, output \f$k\f$ is
+ * \f$\sum_{j=0}^{n-1}a_j\exp(2\pi i j k/n)\f$. Empty input is unchanged.
+ * Applying the transform twice, reversing entries after the first, and dividing
+ * by \f$n\f$ recovers the input, up to floating-point error.
+ * Uses scalar radix-\f$4\f$ butterflies with an optional radix-\f$2\f$ stage;
+ * no SIMD intrinsics or architecture-specific instructions are required.
+ * Roots are generated in `long double`, then rounded to `T`. Each thread
+ * caches \f$O(n)\f$ roots for its largest transform of each scalar type.
+ *
+ * Runs in \f$O(n\log(n+1))\f$ time.
+ *
+ * @tparam T a standard floating-point type.
+ * @param a the complex values to transform.
+ * @pre The length is zero or a power of two, at most \f$2^{30}\f$.
+ * @note Finite intermediate values and normal floating-point semantics are
+ * required; `-ffast-math` invalidates numerical accuracy assumptions.
+ */
 template <typename T>
   requires is_floating_point_v<T>
 inline void fft(vector<complex<T>> &a) {
-  int n = a.size(), L = 31 - __builtin_clz(n);
-  static vector<complex<long double>> R(2, 1);
-  static vector<complex<T>> rt(2, 1); // (^ 10% faster if double)
-  for (static int k = 2; k < n; k *= 2) {
-    R.resize(n);
-    rt.resize(n);
-    auto x = polar(1.0L, acos(-1.0L) / k);
-    for (int i = k; i < 2 * k; i++) {
-      rt[i] = R[i] = i & 1 ? R[i / 2] * x : R[i / 2];
+  assert(a.size() <= (1U << 30) && (a.empty() || has_single_bit(a.size())));
+  int n = a.size();
+  if (n <= 1)
+    return;
+  const auto &roots = get_roots<T>(n);
+  for (int i = 1, j = 0; i < n; ++i) {
+    int bit = n >> 1;
+    for (; j & bit; bit >>= 1)
+      j ^= bit;
+    j ^= bit;
+    if (i < j)
+      swap(a[i], a[j]);
+  }
+  int k = 1;
+  if (countr_zero((unsigned int)n) & 1) {
+    for (int i = 0; i < n; i += 2) {
+      auto x = a[i], y = a[i + 1];
+      a[i] = x + y;
+      a[i + 1] = x - y;
     }
+    k = 2;
   }
-  vector<int> rev(n);
-  for (int i = 0; i < n; i++) {
-    rev[i] = (rev[i / 2] | (i & 1) << L) / 2;
-  }
-  for (int i = 0; i < n; i++) {
-    if (i < rev[i]) {
-      swap(a[i], a[rev[i]]);
-    }
-  }
-  for (int k = 1; k < n; k *= 2) {
-    for (int i = 0; i < n; i += 2 * k) {
-      for (int j = 0; j < k; j++) {
-        // complex<T> z = rt[j+k] * a[i+j+k]; // (25% faster if hand-rolled)
-        auto x = (T *)&rt[j + k], y = (T *)&a[i + j + k];
-        complex<T> z(x[0] * y[0] - x[1] * y[1], x[0] * y[1] + x[1] * y[0]);
-        a[i + j + k] = a[i + j] - z;
-        a[i + j] += z;
+  for (; k < n; k *= 4) {
+    for (int i = 0; i < n; i += 4 * k) {
+      for (int j = 0; j < k; ++j) {
+        auto x = a[i + j];
+        auto y = multiply(a[i + j + k], roots.root[k + j]);
+        auto z = multiply(a[i + j + 2 * k], roots.root[2 * k + j]);
+        auto t = multiply(a[i + j + 3 * k], roots.cube[k + j]);
+        auto p = x + y, q = x - y, s = z + t, d = z - t;
+        d = {-d.imag(), d.real()};
+        a[i + j] = p + s;
+        a[i + j + k] = q + d;
+        a[i + j + 2 * k] = p - s;
+        a[i + j + 3 * k] = q - d;
       }
     }
   }
 }
+
+/**
+ * Multiplies real coefficient vectors using separate real Fourier transforms.
+ *
+ * Packs even and odd coefficients of each input into a complex transform of
+ * half the padded output length. The inputs never share a transform, so an
+ * operand of large magnitude does not mask the other operand. Integral results
+ * are rounded to the nearest integer; floating results retain `long double`
+ * precision when that is the input type, otherwise use `double` arithmetic.
+ * Empty input produces an empty result. Inputs of at most \f$60\f$ terms in
+ * the shorter vector use the quadratic kernel.
+ *
+ * Runs in \f$O((n+m)\log(n+m))\f$ time for nonempty inputs.
+ *
+ * @tparam T an arithmetic coefficient type.
+ * @param a first vector, in ascending degree order.
+ * @param b second vector, in ascending degree order.
+ * @return The \f$n+m-1\f$ product coefficients, or an empty vector.
+ * @pre The padded output length is at most \f$2^{30}\f$.
+ * @pre All intermediate values are finite. Integral results and the rounded
+ * FFT values must fit in signed `long long` and `T`; quadratic intermediate
+ * sums must fit in `T`.
+ * @note FFT rounding is approximate, with error dependent on the input norms,
+ * transform length, and floating-point type. Exact integer multiplication
+ * requires `ntt::convolution_ll` within its documented bounds.
+ */
 template <typename T>
-  requires is_arithmetic_v<T>
-inline vector<T> convolution(const vector<T> &ta, const vector<T> &tb) {
-  int n = ta.size(), m = tb.size();
-  if (!n || !m) {
+  requires(is_arithmetic_v<T> && !same_as<T, bool>)
+inline vector<T> convolution(const vector<T> &a, const vector<T> &b) {
+  int n = a.size(), m = b.size();
+  if (!n || !m)
     return {};
+  if (min(n, m) <= 60)
+    return convolution_naive(a, b);
+  using real_type =
+      conditional_t<is_floating_point_v<T>, common_type_t<T, double>, double>;
+  using C = complex<real_type>;
+  int z = bit_ceil((unsigned int)(n + m - 1)), h = z / 2;
+  vector<C> x(h), y(h), out(h);
+  for (int i = 0; i < n; ++i) {
+    if (i & 1)
+      x[i / 2].imag(real_type(a[i]));
+    else
+      x[i / 2].real(real_type(a[i]));
   }
-  if (min(n, m) <= 60) {
-    return convolution_naive(ta, tb);
+  for (int i = 0; i < m; ++i) {
+    if (i & 1)
+      y[i / 2].imag(real_type(b[i]));
+    else
+      y[i / 2].real(real_type(b[i]));
   }
-  vector<double> a(n), b(m);
-  for (int i = 0; i < n; i++) {
-    a[i] = ta[i];
+  fft(x);
+  fft(y);
+  const auto &roots = get_roots<real_type>(h);
+  const real_type scale = real_type(1) / h;
+  for (int k = 0; k < h; ++k) {
+    int j = -k & (h - 1);
+    auto w = roots.root[h / 2 + (k & (h / 2 - 1))];
+    if (k >= h / 2)
+      w = -w;
+    auto ae = (x[k] + conj(x[j])) * real_type(0.5);
+    auto ao = (x[k] - conj(x[j])) * C(0, -0.5);
+    auto be = (y[k] + conj(y[j])) * real_type(0.5);
+    auto bo = (y[k] - conj(y[j])) * C(0, -0.5);
+    // If A(x) = Ae(x^2) + x Ao(x^2), then the product's even part
+    // is Ae*Be + x*Ao*Bo, and its odd part is Ae*Bo + Ao*Be.
+    // Form these directly: subtracting two full spectra can lose a small
+    // odd part beside a large even part (or vice versa).
+    auto even = multiply(ae, be) + multiply(multiply(ao, bo), w);
+    auto odd = multiply(ae, bo) + multiply(ao, be);
+    out[k] = (even + C(-odd.imag(), odd.real())) * scale;
   }
-  for (int i = 0; i < m; i++) {
-    b[i] = tb[i];
-  }
-  int z = bit_ceil((unsigned int)(n + m - 1));
-  vector<complex<double>> in(z), out(z);
-  copy(a.begin(), a.end(), in.begin());
-  for (int i = 0; i < m; i++) {
-    in[i].imag(b[i]);
-  }
-  fft(in);
-  for (complex<double> &x : in) {
-    x *= x;
-  }
-  for (int i = 0; i < z; i++) {
-    out[i] = in[-i & (z - 1)] - conj(in[i]);
-  }
+  reverse(out.begin() + 1, out.end());
   fft(out);
   vector<T> res(n + m - 1);
-  for (int i = 0; i < n + m - 1; i++) {
-    if constexpr (integral<T>) {
-      res[i] = T(round_integral(imag(out[i]) / (4 * z)));
-    } else {
-      res[i] = imag(out[i]) / (4 * z);
-    }
+  for (int i = 0; i < n + m - 1; ++i) {
+    real_type value = i & 1 ? out[i / 2].imag() : out[i / 2].real();
+    if constexpr (integral<T>)
+      res[i] = T(round_integral(value));
+    else
+      res[i] = T(value);
   }
   return res;
 }
+/**
+ * Multiplies unsigned coefficient vectors using split-coefficient FFT.
+ *
+ * Splits inputs into high and low base-\f$2^{15}\f$ digits. Reconstruction
+ * uses unsigned arithmetic modulo the range of `T`, including for narrow
+ * integer types. Empty input produces an empty result; the shorter input
+ * having at most \f$60\f$ terms selects the quadratic kernel.
+ *
+ * Runs in \f$O((n+m)\log(n+m))\f$ time for nonempty inputs.
+ *
+ * @tparam T an unsigned integral coefficient type, excluding `bool`.
+ * @param a first vector, in ascending degree order.
+ * @param b second vector, in ascending degree order.
+ * @return The \f$n+m-1\f$ product coefficients, reduced to `T`, or an empty
+ * vector.
+ * @pre The padded output length is at most \f$2^{30}\f$.
+ * @pre Each split component and its rounded FFT value fit in
+ * `std::common_type_t<T, unsigned long long>`.
+ * @note Transforms use `double`. Every reconstructed component must have
+ * absolute error less than \f$1/2\f$ for correct integer reconstruction;
+ * arbitrary coefficient widths and lengths are not guaranteed to be exact.
+ */
 template <concepts::broadly_unsigned_integral T>
+  requires(!same_as<T, bool>)
 inline vector<T> convolution_sqrt(const vector<T> &a, const vector<T> &b) {
   int n = a.size(), m = b.size();
   if (!n || !m) {
@@ -536,12 +703,40 @@ inline vector<T> convolution_sqrt(const vector<T> &a, const vector<T> &b) {
   fft(outl), fft(outs);
   vector<T> res(n + m - 1);
   for (int i = 0; i < n + m - 1; i++) {
-    T av = (T)(real(outl[i]) + .5), cv = (T)(imag(outs[i]) + .5);
-    T bv = (T)(imag(outl[i]) + .5) + (T)(real(outs[i]) + .5);
-    res[i] = (av * cut + bv) * cut + cv;
+    // Widen narrow coefficient types before reconstruction so integer
+    // promotions cannot turn the intended modular arithmetic into signed
+    // overflow. Wider unsigned types retain their own wraparound semantics.
+    using wide_type = common_type_t<T, unsigned long long>;
+    wide_type av = round_nonnegative<wide_type>(real(outl[i]));
+    wide_type cv = round_nonnegative<wide_type>(imag(outs[i]));
+    wide_type bv = round_nonnegative<wide_type>(imag(outl[i])) +
+                   round_nonnegative<wide_type>(real(outs[i]));
+    res[i] = T((av * cut + bv) * cut + cv);
   }
   return res;
 }
+/**
+ * Multiplies modular coefficient vectors using split-coefficient FFT.
+ *
+ * Residues are centered around zero before splitting at approximately
+ * \f$\sqrt p\f$, with the low digit also centered around zero. This reduces
+ * the magnitudes of the transformed components and their rounding errors.
+ * Empty input produces an empty result; the shorter input having at most
+ * \f$60\f$ terms selects the quadratic kernel.
+ *
+ * Runs in \f$O((n+m)\log(n+m))\f$ time for nonempty inputs.
+ *
+ * @tparam mint a modular integer with modulus \f$2\le p\le2^{31}-1\f$.
+ * @param a first vector, in ascending degree order.
+ * @param b second vector, in ascending degree order.
+ * @return The \f$n+m-1\f$ product coefficients, or an empty vector.
+ * @pre The padded output length is at most \f$2^{30}\f$.
+ * @pre The modulus remains fixed throughout the operation.
+ * @note The transforms use `double`. Every split convolution component must
+ * have absolute error less than \f$1/2\f$ for correct integer reconstruction;
+ * this is not guaranteed for arbitrary input lengths and moduli. Use the NTT
+ * backend when exact results are required.
+ */
 template <ModInt mint>
 vector<mint> convolution_arb_mod(const vector<mint> &a, const vector<mint> &b) {
   int n = a.size(), m = b.size();
@@ -553,11 +748,18 @@ vector<mint> convolution_arb_mod(const vector<mint> &a, const vector<mint> &b) {
   }
   int z = bit_ceil((unsigned int)(n + m - 1)), cut = int(sqrt(mint::imod()));
   vector<complex<double>> L(z), R(z), outs(z), outl(z);
+  auto split = [cut](mint coefficient) {
+    long long value = coefficient.val();
+    if (value > mint::imod() / 2)
+      value -= mint::imod();
+    long long high = (value + (value < 0 ? -cut / 2 : cut / 2)) / cut;
+    return complex<double>(high, value - high * cut);
+  };
   for (int i = 0; i < n; i++) {
-    L[i] = complex<double>(a[i].val() / cut, a[i].val() % cut);
+    L[i] = split(a[i]);
   }
   for (int i = 0; i < m; i++) {
-    R[i] = complex<double>(b[i].val() / cut, b[i].val() % cut);
+    R[i] = split(b[i]);
   }
   fft(L), fft(R);
   for (int i = 0; i < z; i++) {
@@ -568,10 +770,10 @@ vector<mint> convolution_arb_mod(const vector<mint> &a, const vector<mint> &b) {
   fft(outl), fft(outs);
   vector<mint> res(n + m - 1);
   for (int i = 0; i < n + m - 1; i++) {
-    long long av = (long long)(real(outl[i]) + .5),
-              cv = (long long)(imag(outs[i]) + .5);
+    long long av = round_integral(real(outl[i])),
+              cv = round_integral(imag(outs[i]));
     long long bv =
-        (long long)(imag(outl[i]) + .5) + (long long)(real(outs[i]) + .5);
+        round_integral(imag(outl[i])) + round_integral(real(outs[i]));
     res[i] = (av % mint::imod() * cut + bv) % mint::imod() * cut + cv;
   }
   return res;
@@ -611,7 +813,7 @@ vector<complex<T>> convolution_complex(vector<complex<T>> a,
  */
 enum class PolySetting {
   ntt,      ///< Exact NTT, with CRT for unsupported transform lengths/moduli.
-  fft,      ///< Real/integral convolution using double-precision FFT.
+  fft,      ///< Real/integral FFT; preserves `long double` inputs.
   fft_sqrt, ///< Split-coefficient FFT for unsigned integers or modints.
   fft_complex, ///< Complex convolution using the coefficient's floating type.
 };
@@ -622,8 +824,9 @@ enum class PolySetting {
  * NTT accepts modular integers or integral types of at most \f$64\f$ bits. The
  * real FFT accepts arithmetic types, the split FFT accepts modular or unsigned
  * integral types, and the complex FFT accepts `std::complex` of a floating
- * type. This is a compile-time type check; modulus, length, and precision
- * limits are separate operation contracts documented by `Poly`.
+ * type. All backends exclude `bool`. This is a compile-time type check;
+ * modulus, length, and precision limits are separate operation contracts
+ * documented by `Poly`.
  *
  * @tparam T the coefficient type to check.
  * @tparam setting the requested multiplication backend.
@@ -631,17 +834,18 @@ enum class PolySetting {
  */
 template <typename T, PolySetting setting>
 concept ValidPolySetting =
-    (setting == PolySetting::ntt &&
-     (ModInt<T> ||
-      (integral<T> && internal::type_traits::is_64bit_or_less_v<T>))) ||
-    (setting == PolySetting::fft && is_arithmetic_v<T>) ||
-    (setting == PolySetting::fft_sqrt &&
-     (ModInt<T> || internal::concepts::broadly_unsigned_integral<T>)) ||
-    (setting == PolySetting::fft_complex && requires {
-      typename T::value_type;
-      requires floating_point<typename T::value_type>;
-      requires same_as<T, complex<typename T::value_type>>;
-    });
+    !same_as<T, bool> &&
+    ((setting == PolySetting::ntt &&
+      (ModInt<T> ||
+       (integral<T> && internal::type_traits::is_64bit_or_less_v<T>))) ||
+     (setting == PolySetting::fft && is_arithmetic_v<T>) ||
+     (setting == PolySetting::fft_sqrt &&
+      (ModInt<T> || internal::concepts::broadly_unsigned_integral<T>)) ||
+     (setting == PolySetting::fft_complex && requires {
+       typename T::value_type;
+       requires floating_point<typename T::value_type>;
+       requires same_as<T, complex<typename T::value_type>>;
+     }));
 
 /**
  * A polynomial with arithmetic, evaluation, and formal power series operations.
@@ -683,7 +887,13 @@ concept ValidPolySetting =
  * most \f$2^{23}\f$. Integral NTT products require every result to fit in
  * signed \f$64\f$-bit integers and every intermediate sum in the quadratic
  * kernel to avoid overflow. FFT backends retain floating-point precision
- * limitations.
+ * limitations. Real FFT multiplication transforms each operand separately to
+ * avoid precision loss from packing operands with very different magnitudes.
+ * It uses `double` arithmetic except for `long double` coefficients.
+ * Modular split FFT centers residues and digits before transforming them, but
+ * still requires each reconstructed component to have error below \f$1/2\f$.
+ * Floating backends require finite intermediate values and do not support
+ * `-ffast-math`.
  *
  * @par Complexity notation
  * Let \f$s\f$ be the stored input size, \f$p\f$ the modulus, and \f$M(n)\f$ the
